@@ -1,12 +1,10 @@
-#editor-container {
-    height: 350px;
-  }
-  
-  .container {
-    margin-bottom: 10px;
-    text-align: right;
-  }
-  
-  .container a {
-    font-family: Helvetia, sans-serif;
-  }
+#head{
+    box-sizing: border-box;
+    font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+    margin-left: 15px;
+    height: 70px;
+}
+#head h2{
+    text-align: center;
+    height: 15px;
+}
