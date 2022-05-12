@@ -36,7 +36,7 @@ socket.on("document broadcast", (incoming_document)=>{
   console.log(`recevied a new document:\n ${incoming_document}`)
   if (sent === true){
     //TODO:: this will go wrong fix it
-    if(incoming_document.delta. === sent_delta){
+    if(incoming_document.delta === sent_delta){
       sent = false
       acknowledged = true
     }
