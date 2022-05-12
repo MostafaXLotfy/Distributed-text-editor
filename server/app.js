@@ -5,7 +5,11 @@ const io = require('socket.io')(http);
 const path = require("path")
 const Delta = require("quill-delta")
 
-let delta = new Delta()
+let delta = new Delta([
+    { insert: 'Gandalf', attributes: { bold: true } },
+    { insert: ' the ' },
+    { insert: 'Grey', attributes: { color: '#ccc' } }
+  ])
 let current_v = 0
 let live_user_count = 0
 
@@ -17,6 +21,11 @@ app.get("/",(req, res)=>{
 
 io.on('connection', (socket) => {
     console.log('a user connected');
+    //send latest delta to client after establishing a connection
+    io.to(socket.id).emit("latest edits", {
+        "delta":delta,
+        "v":current_v
+    })
     //increment the number of connected users and broadcast it to all connected clients
     live_user_count++
     socket.broadcast.emit("user connected", live_user_count)
@@ -25,10 +34,10 @@ io.on('connection', (socket) => {
     socket.on("document edit", (edit)=>{
         console.log(`received edit:\n ${edit}`)
         if (edit.v > current_v) 
-            delta.compose(edit.delta)
+            delta = delta.compose(edit.delta)
 
         else
-            delta.transform(edit.delta, true)
+            delta = delta.transform(edit.delta, true)
     
     //bump the current document version and broadcast it to all clients
         current_v++

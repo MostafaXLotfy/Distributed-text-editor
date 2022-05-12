@@ -16,7 +16,7 @@ let number_of_users = 0
 
 const on_text_change = (delta) =>{
   change = change.compose(delta);
-  if (acknowledged === true){
+  // if (acknowledged === true){
     console.log('sending an edit to the server')
     current_version++;
     sent_delta = delta
@@ -26,14 +26,14 @@ const on_text_change = (delta) =>{
     })
     sent = true
     acknowledged = false
-  }
+ // }
 
 
 }
 
 socket.on("document broadcast", (incoming_document)=>{
   current_version = incoming_document.v
-  console.log(`recevied a new document:\n ${incoming_document}`)
+  console.log(`recevied a new document:\n ${incoming_document.delta}`)
   if (sent === true){
     //TODO:: this will go wrong fix it
     if(incoming_document.delta === sent_delta){
@@ -42,9 +42,24 @@ socket.on("document broadcast", (incoming_document)=>{
     }
   }
   change = change.compose(incoming_document.delta)
-  quill.setContents(change)
+  quill.setContents(change, "silent")
 
 }) 
+
+socket.on("latest edits", (incoming_document)=>{
+  current_version = incoming_document.v
+  console.log(current_version)
+  console.log(`recevied latest edits:\n ${incoming_document.delta}`)
+  if (sent === true){
+    //TODO:: this will go wrong fix it
+    if(incoming_document.delta === sent_delta){
+      sent = false
+      acknowledged = true
+    }
+  }
+  change = change.compose(incoming_document.delta)
+  quill.setContents(change, "silent")
+})
 
 socket.on("user connected", (live_users_counter)=>{
   console.log(`a new user connnected and the number of users is ${live_users_counter}`)
