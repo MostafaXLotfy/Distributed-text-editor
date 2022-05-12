@@ -9,6 +9,12 @@ let delta = new Delta()
 let current_v = 0
 let live_user_count = 0
 
+app.use(express.static(path.join(__dirname, "../clientApp")));
+
+app.get("/",(req, res)=>{
+    res.sendFile(path.join(__dirname, "../clientApp/index.html"))
+})
+
 io.on('connection', (socket) => {
     console.log('a user connected');
     //increment the number of connected users and broadcast it to all connected clients
@@ -39,9 +45,6 @@ io.on('connection', (socket) => {
  });
   });
 
-app.get("/",(req, res)=>{
-    res.sendFile(path.join(__dirname, "../clientApp/index.html"))
-})
 
 http.listen(3000, ()=>{
     console.log("app listening on port 3000")
