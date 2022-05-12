@@ -23,6 +23,7 @@ io.on('connection', (socket) => {
 
     //listen for the docuemnt edit event from clients
     socket.on("document edit", (edit)=>{
+        console.log(`received edit:\n ${edit}`)
         if (edit.v > current_v) 
             delta.compose(edit.delta)
 
@@ -31,7 +32,12 @@ io.on('connection', (socket) => {
     
     //bump the current document version and broadcast it to all clients
         current_v++
-        socket.broadcast.emit("document broadcast", {
+        console.log(`brodcasting after accepting the edit`)
+        /*
+        very important
+        don't use socket.broadcast.emit inside socket.on cause it doesn't work use io.emit instead
+        */
+        io.emit("document broadcast", {
             "delta":delta,
             "v":current_v
         });
