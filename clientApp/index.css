@@ -1,0 +1,12 @@
+#editor-container {
+    height: 350px;
+  }
+  
+  .container {
+    margin-bottom: 10px;
+    text-align: right;
+  }
+  
+  .container a {
+    font-family: Helvetia, sans-serif;
+  }
