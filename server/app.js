@@ -5,7 +5,7 @@ const io = require('socket.io')(http);
 const path = require("path")
 const Delta = require("quill-delta")
 const logic = require('./logic')
-
+const port = process.env.PORT || 3000;
 
 
 app.use(express.static(path.join(__dirname, "../clientApp")));
@@ -16,6 +16,6 @@ app.get("/",(req, res)=>{
 
 logic.start_socketio(io)
 
-http.listen(3000, ()=>{
+http.listen(port, ()=>{
     console.log("app listening on port 3000")
 })
