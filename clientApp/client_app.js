@@ -17,7 +17,7 @@ let pending_delta = new Delta()
 
 const update_user_count =(user_count) =>{
   element = document.getElementById('user-number-paragraph')
-  element.textContent = `connected users${live_users_counter}`
+  element.textContent = `connected users${user_count}`
 }
 
 const on_text_change = (delta, old_delta,source) =>{
