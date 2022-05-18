@@ -70,7 +70,7 @@ socket.on("document broadcast", (incoming_document)=>{
 socket.on("init client", (new_document)=>{
   
   n = new_document
-  if (client_state !==null){
+  if (client_state === null){
     client_state = new ClientState(new_document.delta, new_document.v)
   }else{
     //TODO:: add logic for to synchronize client document with server in case internet disconnects 
