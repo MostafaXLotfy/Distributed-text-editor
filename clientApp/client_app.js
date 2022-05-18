@@ -1,8 +1,6 @@
-
 let quill = new Quill('#editor', {
-  theme: 'snow'
+  theme: 'snow',
 });
-
 
 let Delta = Quill.import('delta')
 let socket = io()
@@ -62,7 +60,7 @@ socket.on("document broadcast", (incoming_document)=>{
   }
   else{
     client_state.update_document(incoming_document.delta, incoming_document.v)
-    quill.setContents(client_state.current_document, "silent")
+    quill.updateContents(incoming_document.delta, "silent")
   }
 }) 
 
@@ -70,15 +68,16 @@ socket.on("document broadcast", (incoming_document)=>{
 socket.on("init client", (new_document)=>{
   
   n = new_document
-  if (client_state === null){
+  if (!client_state){
     client_state = new ClientState(new_document.delta, new_document.v)
+    quill.setContents(client_state.current_document, "silent")
   }else{
     //TODO:: add logic for to synchronize client document with server in case internet disconnects 
     //client_state.update_document(new_document.delta, new_document.v)
+    quill.updateContents(client_state.current_document, "silent")
   }
   update_user_count(new_document.clientCount)
   console.log(`recevied latest edits:\n`)
-  quill.setContents(client_state.current_document, "silent")
 })
 
 socket.on("user connected", (live_users_counter)=>{
