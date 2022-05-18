@@ -9,10 +9,10 @@ class ClientState{
 
     update_document(delta, version=null){
         let new_document = this.current_document.compose(delta)
-        let diff = this.current_document.diff(new_document)
+        // let diff = this.current_document.diff(new_document)
         this.current_document = new_document
         this.current_version = (version === null ? this.current_version + 1 : version)
-        return diff
+        // return diff
     }
 
     push_pending_delta(delta){
