@@ -1,14 +1,17 @@
 const Delta = require("quill-delta")
+const fs = require("fs")
 
-
-let currentDelta = new Delta([
-    { insert: 'Gandalf', attributes: { bold: true } },
-    { insert: ' the ' },
-    { insert: 'Grey', attributes: { color: '#ccc' } }
-  ])
+let currentDelta = new Delta()
 let current_v = 0
 let currentDocument = new Delta() //used to provide new clients with latest updates on the document.
-currentDocument = currentDocument.compose(currentDelta)
+let writting = false
+
+//if a json file exists then read it, if not then create it
+if(fs.existsSync("document.json"))
+    currentDocument = new Delta(JSON.parse(fs.readFileSync("document.json")))
+else
+    fs.writeFileSync("document.json",JSON.stringify(currentDocument))
+
 
 const start_socketio = (io)=>{
     io.on('connection', (socket) => {
@@ -36,6 +39,9 @@ const start_socketio = (io)=>{
             }
 
             currentDocument = currentDocument.compose(currentDelta)
+            //save the document after each edit
+            if(!writting)
+                fs.writeFile("document.json", JSON.stringify(currentDocument), ()=>{writting = false})
             //bump the current document version and broadcast it to all clients
             current_v++
             console.log(`brodcasting after accepting the edit`)
