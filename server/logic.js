@@ -1,5 +1,3 @@
-const { json } = require("express")
-const path = require("path")
 const Delta = require("quill-delta")
 
 
@@ -9,22 +7,19 @@ let curr_delta = new Delta([
     { insert: 'Grey', attributes: { color: '#ccc' } }
   ])
 let current_v = 0
-let live_user_count = 0
-let pending_changes = []
 let current_document = new Delta() //used to provide new clients with latest updates on the document.
 current_document = current_document.compose(curr_delta)
 
 const start_socketio = (io)=>{
     io.on('connection', (socket) => {
-        console.log('a user connected');
+        console.log('a user connected', io.engine.clientsCount);
         //send latest delta to client after establishing a connection
         io.to(socket.id).emit("latest edits", {
             "delta":current_document,
             "v":current_v
         })
-        //increment the number of connected users and broadcast it to all connected clients
-        live_user_count++
-        socket.broadcast.emit("user connected", live_user_count)
+        
+        socket.broadcast.emit("user connected", io.engine.clientsCount)
     
         //listen for the docuemnt edit event from clients
         //quill adds new lines between deltas when recieving documents fast, using a receive buffer may help.
@@ -57,10 +52,9 @@ const start_socketio = (io)=>{
         })
         //Whenever someone disconnects this piece of code executed
         socket.on('disconnect', function () {
-        console.log('A user disconnected');
-        //decrement the number of connected users and broadcast it to all connected clients
-        live_user_count--
-        socket.broadcast.emit("user disconnected", live_user_count)
+        console.log('A user disconnected', io.engine.clientsCount);
+
+        socket.broadcast.emit("user disconnected", io.engine.clientsCount)
      });
       });
 
