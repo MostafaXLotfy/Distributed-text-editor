@@ -1,5 +1,5 @@
 let Delta = Quill.import('delta')
-let socket = io()
+let socket = io({transports:["websocket"]})
 var client_state = null
 let pending_delta = new Delta()
 let editor = null

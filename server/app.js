@@ -12,7 +12,6 @@ app.use(express.static(path.join(__dirname, "../clientApp")));
 app.get("/",(req, res)=>{
     res.sendFile(path.join(__dirname, "../clientApp/index.html"))
 })
-
 logic.start_socketio(io)
 
 http.listen(port, ()=>{
