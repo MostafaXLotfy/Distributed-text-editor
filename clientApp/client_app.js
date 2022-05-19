@@ -80,7 +80,7 @@ const interval_handler = ()=>{
 window.addEventListener('load', async () => {
   await socket.on("init client", init_client)
   editor = new Editor()
-  setInterval(interval_handler, 200);
+  setInterval(interval_handler, 500);
 
 })
 
