@@ -31,23 +31,29 @@ const start_socketio = (io) => {
       if (edit.v > current_v) {
 
         currentDelta = new Delta(edit.delta);
-        currentDocument = currentDocument.compose(currentDelta);
-        //save the document after each edit if there is no running writting operations else raise the delta not saved flag
-        if (!writting) saveDocument();
-        else delta_not_saved = true;
 
-        //bump the current document version and broadcast it to all clients
-        current_v++;
-        console.log(`brodcasting after accepting the edit`);
-        /*
-        very important
-        don't use socket.broadcast.emit inside socket.on cause it doesn't work use io.emit instead
-        */
-        io.emit("document broadcast", {
-          delta: currentDelta,
-          v: current_v,
-        });
       }
+      else{
+        currentDelta = currentDelta.transform(edit.delta, true)
+      }
+      
+      currentDocument = currentDocument.compose(currentDelta);
+      //save the document after each edit if there is no running writting operations else raise the delta not saved flag
+      if (!writting) saveDocument();
+      else delta_not_saved = true;
+
+      //bump the current document version and broadcast it to all clients
+      current_v++;
+      console.log(`brodcasting after accepting the edit`);
+      /*
+      very important
+      don't use socket.broadcast.emit inside socket.on cause it doesn't work use io.emit instead
+      */
+      io.emit("document broadcast", {
+        delta: currentDelta,
+        v: current_v,
+      });
+
     });
     
     //Whenever someone disconnects this piece of code gets executed
