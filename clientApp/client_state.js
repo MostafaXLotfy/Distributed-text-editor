@@ -5,6 +5,7 @@ class ClientState{
         this.current_version = current_version
         this.pending_changes = new Delta()
         this.last_sent_delta = null
+        this.can_send = false
     }
 
     update_version(version=null){
@@ -20,11 +21,10 @@ class ClientState{
     }
 
     get_pending_changes(){
-        let pending_changes = this.pending_changes
+        let pending_changes_temp = this.pending_changes
         this.pending_changes = new Delta()
-        return pending_changes
+        return pending_changes_temp
     }
 
-
-
+    foo
 }

@@ -15,21 +15,23 @@ class Editor {
     }
 
     __on_text_change(delta, old_delta, source) {
-        client_state.update_version()
         if (source != "user")
             return
-        // TODO:: Add logic for pending edits
-        if (!client_state.waiting_ack) {
-            socket.emit("document edit", {
-                "delta": delta,
-                "v": client_state.current_version
-            })
+        client_state.pend_changes(delta)
 
-            client_state.last_sent_delta = new Delta(delta)
-            client_state.waiting_ack = true
-        } else {
-            client_state.pend_changes(delta)
-        }
+        // client_state.update_version()
+        // // TODO:: Add logic for pending edits
+        // if (!client_state.waiting_ack) {
+        //     socket.emit("document edit", {
+        //         "delta": delta,
+        //         "v": client_state.current_version
+        //     })
+
+        //     client_state.last_sent_delta = new Delta(delta)
+        //     client_state.waiting_ack = true
+        // } else {
+        //     client_state.pend_changes(delta)
+        // }
     }
 
     __updateCursor(range) {
