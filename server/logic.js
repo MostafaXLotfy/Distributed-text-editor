@@ -33,8 +33,8 @@ const start_socketio = (io) => {
         currentDelta = new Delta(edit.delta);
         currentDocument = currentDocument.compose(currentDelta);
         //save the document after each edit if there is no running writting operations else raise the delta not saved flag
-        if (!writting) saveDocument();
-        else delta_not_saved = true;
+        // if (!writting) saveDocument();
+        // else delta_not_saved = true;
 
         //bump the current document version and broadcast it to all clients
         current_v++;
