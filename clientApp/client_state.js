@@ -1,27 +1,30 @@
 // let Delta = Quill.import('delta')
 class ClientState{
-    constructor(current_document, current_version){
+    constructor(current_version){
         this.waiting_ack = false
-        this.current_document = new Delta().compose(current_document)
         this.current_version = current_version
-        this.pending_edits = []
+        this.pending_changes = new Delta()
+        this.last_sent_delta = null
     }
 
-    update_document(delta, version=null){
-        let new_document = this.current_document.compose(delta)
-        this.current_document = new_document
+    update_version(version=null){
         this.current_version = (version === null ? this.current_version + 1 : version)
     }
 
-    push_pending_delta(delta){
-        this.pending_edits.push({"delta":delta, "v":this.current_version})
+    pend_changes(delta){
+        this.pending_changes = this.pending_changes.compose(delta)
     }
 
-    pop_pending_delta(){
-        return this.pending_edits.shift()        
+    have_pending_changes(){
+        return this.pending_changes.ops.length !== 0
     }
 
-    is_pending_delta(){
-        return this.pending_edits.length === 0
+    get_pending_changes(){
+        let pending_changes = this.pending_changes
+        this.pending_changes = new Delta()
+        return pending_changes
     }
+
+
+
 }
