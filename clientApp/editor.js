@@ -1,5 +1,6 @@
 class Editor {
     constructor(on_text_change, on_selection_change) {
+
         Quill.register('modules/cursors', QuillCursors)
         this.quill_editor = new Quill('#editor', {
             theme: 'snow',
@@ -15,23 +16,9 @@ class Editor {
     }
 
     __on_text_change(delta, old_delta, source) {
-        if (source != "user")
+        if (source !== "user")
             return
         client_state.pend_changes(delta)
-
-        // client_state.update_version()
-        // // TODO:: Add logic for pending edits
-        // if (!client_state.waiting_ack) {
-        //     socket.emit("document edit", {
-        //         "delta": delta,
-        //         "v": client_state.current_version
-        //     })
-
-        //     client_state.last_sent_delta = new Delta(delta)
-        //     client_state.waiting_ack = true
-        // } else {
-        //     client_state.pend_changes(delta)
-        // }
     }
 
     __updateCursor(range) {
@@ -54,3 +41,4 @@ class Editor {
         this.quill_editor.updateContents(delta, source)
     }
 }
+

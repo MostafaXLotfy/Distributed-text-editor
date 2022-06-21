@@ -1,4 +1,3 @@
-// let Delta = Quill.import('delta')
 class ClientState{
     constructor(current_version){
         this.waiting_ack = false
@@ -7,6 +6,7 @@ class ClientState{
         this.last_sent_delta = null
         this.can_send = false
     }
+
 
     update_version(version=null){
         this.current_version = (version === null ? this.current_version + 1 : version)
@@ -25,6 +25,4 @@ class ClientState{
         this.pending_changes = new Delta()
         return pending_changes_temp
     }
-
-    foo
 }
