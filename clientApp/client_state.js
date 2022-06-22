@@ -15,7 +15,9 @@ class ClientState{
     }
 
     pend_changes(delta){
+        console.log(`pending before compose${JSON.stringify(this.pending_changes)}`)
         this.pending_changes = this.pending_changes.compose(delta)
+        console.log(`pending after compose${JSON.stringify(this.pending_changes)}`)
         this.latest_delta = this.pending_changes
     }
 

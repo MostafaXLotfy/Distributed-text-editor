@@ -42,13 +42,28 @@ socket.on("document broadcast", (incoming_document) => {
     new_delta = new Delta(incoming_document.delta)
     console.log(`last sent: ${JSON.stringify(client_state.last_sent_delta)}`)
     console.log(`new delta: ${JSON.stringify(incoming_document.delta)}`)
+    
     if (!_.isEqual(client_state.last_sent_delta.ops, client_state.latest_delta.ops)){
-      new_delta = client_state.last_sent_delta.compose(client_state.latest_delta).transform(new_delta, false)
+      console.log(`here3`)
+      console.log(`last_sent_delta: ${JSON.stringify(client_state.last_sent_delta)}`)
+      console.log(`latest_sent_delta: ${JSON.stringify(client_state.latest_delta)}`)
 
+      new_delta = client_state.last_sent_delta.compose(client_state.latest_delta).transform(new_delta, false)
     }else{
+      console.log(`here4`)
+      console.log(`last_sent_delta: ${JSON.stringify(client_state.last_sent_delta)}`)
+      console.log(`latest_sent_delta: ${JSON.stringify(client_state.latest_delta)}`)
       new_delta = client_state.last_sent_delta.transform(new_delta, false)
     }
     client_state.last_sent_delta = new_delta.transform(client_state.last_sent_delta, false)
+    client_state.latest_delta = client_state.last_sent_delta
+    if (client_state.have_pending_changes()){
+      console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
+
+      client_state.pending_changes = new_delta.transform(client_state.pending_changes, false)
+      client_state.latest_delta = client_state.pending_changes
+      console.log(`pending after: ${JSON.stringify(client_state.pending_changes)}`)
+    }
     console.log(`last sent after rebase: ${JSON.stringify(client_state.last_sent_delta)}`)
     console.log(`new delta after rebase: ${JSON.stringify(new_delta)}`)
     console.log(`latest edit ${JSON.stringify(client_state.latest_delta)}`)
@@ -66,9 +81,8 @@ socket.on("document broadcast", (incoming_document) => {
 
     if (!_.isEqual(client_state.last_sent_delta.ops, client_state.latest_delta.ops)){
       console.log('here 1')
-      console.log(`${JSON.stringify(client_state.latest_delta)}`)
 
-      console.log(`last sent: ${JSON.stringify(client_state.last_sent_delta)}`)
+      console.log(`last sent: ${JSON.stringify(client_state.latest_delta)}`)
       console.log(`latest sent: ${JSON.stringify(client_state.last_sent_delta)}`)
 
       new_delta = client_state.last_sent_delta.compose(client_state.latest_delta).transform(new_delta, false)
@@ -82,11 +96,14 @@ socket.on("document broadcast", (incoming_document) => {
       new_delta = client_state.pending_changes.transform(new_delta, false)
 
     }
+    // client_state.last_sent_delta = new_delta.transform(client_state.last_sent_delta, false)
+    // client_state.latest_delta = client_state.last_sent_delta
 
     if (client_state.have_pending_changes()){
       console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
 
       client_state.pending_changes = new_delta.transform(client_state.pending_changes, false)
+      client_state.latest_delta = client_state.pending_changes
       console.log(`pending after: ${JSON.stringify(client_state.pending_changes)}`)
     }
     console.log(`incoming before: ${JSON.stringify(incoming_document.delta)}`)
@@ -137,7 +154,7 @@ const interval_handler = ()=>{
 window.addEventListener('load', async () => {
   await socket.on("init client", init_client)
   editor = new Editor()
-  setInterval(interval_handler, 100);
+  setInterval(interval_handler, 500);
 
 })
 
