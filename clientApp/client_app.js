@@ -32,20 +32,27 @@ socket.on("document broadcast", (incoming_document) => {
 
   if (client_state.waiting_ack && _.isEqual(client_state.last_sent_delta.ops, incoming_document.delta.ops)) {
     client_state.waiting_ack = false
+    client_state.last_sent_delta = new Delta()
+    client_state.latest_delta = new Delta()
+
+    console.warn('acked')
   } else if (client_state.waiting_ack && incoming_document.v <= client_state.current_version) {
-    console.warn('doing rebase')
+    console.error('doing rebase')
     console.log(`document: ${JSON.stringify(editor.quill_editor.getContents())}`)
     new_delta = new Delta(incoming_document.delta)
     console.log(`last sent: ${JSON.stringify(client_state.last_sent_delta)}`)
     console.log(`new delta: ${JSON.stringify(incoming_document.delta)}`)
-    client_state.last_sent_delta = new_delta.transform(client_state.last_sent_delta, false)
-    // new_delta = new_delta.transform(client_state.last_sent_delta, false)
-    console.log(`last sent after rebase: ${JSON.stringify(client_state.last_sent_delta)}`)
-    new_delta = client_state.last_sent_delta.transform(new_delta, false)
-    console.log(`new delta after rebase: ${JSON.stringify(new_delta)}`)
-    console.log(`pending:${JSON.stringify(client_state.pending_changes)}`)
+    if (!_.isEqual(client_state.last_sent_delta.ops, client_state.latest_delta.ops)){
+      new_delta = client_state.last_sent_delta.compose(client_state.latest_delta).transform(new_delta, false)
 
-    editor.update_contents(new_delta, "silent")
+    }else{
+      new_delta = client_state.last_sent_delta.transform(new_delta, false)
+    }
+    client_state.last_sent_delta = new_delta.transform(client_state.last_sent_delta, false)
+    console.log(`last sent after rebase: ${JSON.stringify(client_state.last_sent_delta)}`)
+    console.log(`new delta after rebase: ${JSON.stringify(new_delta)}`)
+    console.log(`latest edit ${JSON.stringify(client_state.latest_delta)}`)
+    editor.update_contents(new_delta, "shit")
     console.log('document after rebase: ' + JSON.stringify(editor.quill_editor.getContents()))
     client_state.update_version(incoming_document.v + 1)
     socket.emit("document edit", {
@@ -53,10 +60,45 @@ socket.on("document broadcast", (incoming_document) => {
       "v": client_state.current_version
     })
   } else {
-    console.log(`new_delta: ${JSON.stringify(incoming_document.delta)}`)
-    console.log(`document: ${JSON.stringify(editor.quill_editor.getContents())}, v: ${incoming_document.v}`)
+    console.warn("new edit received")
     client_state.update_version(incoming_document.v)
-    editor.update_contents(incoming_document.delta, "silent")
+    let new_delta = new Delta(incoming_document.delta)
+
+    if (!_.isEqual(client_state.last_sent_delta.ops, client_state.latest_delta.ops)){
+      console.log('here 1')
+      console.log(`${JSON.stringify(client_state.latest_delta)}`)
+
+      console.log(`last sent: ${JSON.stringify(client_state.last_sent_delta)}`)
+      console.log(`latest sent: ${JSON.stringify(client_state.last_sent_delta)}`)
+
+      new_delta = client_state.last_sent_delta.compose(client_state.latest_delta).transform(new_delta, false)
+
+    }else{
+      console.log('here 2')
+
+      console.log(`${JSON.stringify(client_state.latest_delta)}`)
+      console.log(`pending : ${JSON.stringify(client_state.pending_changes)}`)
+
+      new_delta = client_state.pending_changes.transform(new_delta, false)
+
+    }
+
+    if (client_state.have_pending_changes()){
+      console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
+
+      client_state.pending_changes = new_delta.transform(client_state.pending_changes, false)
+      console.log(`pending after: ${JSON.stringify(client_state.pending_changes)}`)
+    }
+    console.log(`incoming before: ${JSON.stringify(incoming_document.delta)}`)
+
+    console.log(`incoming after: ${JSON.stringify(new_delta)}`)
+
+    editor.update_contents(new_delta, "shit")
+
+
+    // console.log(`delta after transform: ${JSON.stringify(incoming_document.delta)}`)
+    console.log(`document: ${JSON.stringify(editor.quill_editor.getContents())}`)
+
   }
 })
 
@@ -75,8 +117,10 @@ const interval_handler = ()=>{
     if (client_state.have_pending_changes()){
       // TODO:: Add logic for pending edits
       if (client_state.waiting_ack === false) {
+          console.warn("sending")
+          console.log(`try to send ${JSON.stringify(client_state.pending_changes)}`)
+          console.log(`document: ${JSON.stringify(editor.quill_editor.getContents())}`)
           let pending_changes = client_state.get_pending_changes()
-
           client_state.update_version()
           socket.emit("document edit", {
               "delta": pending_changes,
@@ -84,6 +128,8 @@ const interval_handler = ()=>{
           })
           client_state.last_sent_delta = new Delta(pending_changes)
           client_state.waiting_ack = true
+          console.warn('waiting ack')
+
       }
     }
 }
@@ -91,7 +137,7 @@ const interval_handler = ()=>{
 window.addEventListener('load', async () => {
   await socket.on("init client", init_client)
   editor = new Editor()
-  setInterval(interval_handler, 0);
+  setInterval(interval_handler, 100);
 
 })
 

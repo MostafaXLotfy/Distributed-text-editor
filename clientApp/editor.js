@@ -1,5 +1,5 @@
 class Editor {
-    constructor(on_text_change, on_selection_change) {
+    constructor() {
 
         Quill.register('modules/cursors', QuillCursors)
         this.quill_editor = new Quill('#editor', {
@@ -16,8 +16,9 @@ class Editor {
     }
 
     __on_text_change(delta, old_delta, source) {
-        if (source !== "user")
+        if (source !== "user"){
             return
+        }
         client_state.pend_changes(delta)
     }
 

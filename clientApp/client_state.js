@@ -1,9 +1,11 @@
 class ClientState{
     constructor(current_version){
+        this.received_delta = new Delta()
+        this.latest_delta = new Delta()
         this.waiting_ack = false
         this.current_version = current_version
         this.pending_changes = new Delta()
-        this.last_sent_delta = null
+        this.last_sent_delta = new Delta()
         this.can_send = false
     }
 
@@ -14,6 +16,7 @@ class ClientState{
 
     pend_changes(delta){
         this.pending_changes = this.pending_changes.compose(delta)
+        this.latest_delta = this.pending_changes
     }
 
     have_pending_changes(){
