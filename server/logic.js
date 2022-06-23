@@ -40,8 +40,6 @@ const start_socketio = (io) => {
       }
       
       currentDocument = currentDocument.compose(currentDelta);
-      console.log(`edit: ${JSON.stringify(edit.delta)}`);
-      console.log(`document: ${JSON.stringify(currentDocument)}, v: ${current_v}`);
       //save the document after each edit if there is no running writting operations else raise the delta not saved flag
       if (!writting) saveDocument();
       else delta_not_saved = true;
