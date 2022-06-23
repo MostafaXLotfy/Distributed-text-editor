@@ -167,9 +167,10 @@ window.addEventListener('load', async () => {
 
   socket.on(`sync 2`,(incoming_document) =>{
     let temp_delta = new Delta(incoming_document.composed_delta)
-    let diff = new Delta(JSON.parse(localStorage.getItem(`doc_before`))).diff(temp_delta)
+    let diff = (new Delta(doc_before_disconnect)).diff(temp_delta)
 
-    console.log(`doc before: ${JSON.parse(localStorage.getItem(`doc_before`))}`)
+    console.log(`doc before: ${JSON.stringify(doc_before_disconnect)}`)
+    console.log(`incoming doc: ${JSON.stringify(incoming_document.composed_delta)}`)
 
     console.log(`diff before trans: ${JSON.stringify(diff)}`)
     console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
@@ -193,7 +194,7 @@ window.addEventListener('load', async () => {
 
   socket.on('disconnect',()=>{
     console.log(`disconnection`)
-    localStorage.setItem(`doc_before`,JSON.stringify(editor.quill_editor.getContents()))
+    doc_before_disconnect = new Delta(editor.quill_editor.getContents())
     client_state.disconnected = true
 
   })
