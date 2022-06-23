@@ -6,7 +6,7 @@ class ClientState{
         this.current_version = current_version
         this.pending_changes = new Delta()
         this.last_sent_delta = new Delta()
-        this.can_send = false
+        this.disconnected = false
     }
 
 
