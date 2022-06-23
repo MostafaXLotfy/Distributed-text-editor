@@ -190,9 +190,10 @@ window.addEventListener('load', async () => {
     client_state.current_version = incoming_document.version
 
   })
+
   socket.on('disconnect',()=>{
     console.log(`disconnection`)
-    doc_before_disconnect =  editor.quill_editor.getContents()
+    doc_before_disconnect =  new Delta(editor.quill_editor.getContents())
     client_state.disconnected = true
 
   })
