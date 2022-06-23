@@ -169,7 +169,7 @@ window.addEventListener('load', async () => {
     let temp_delta = new Delta(incoming_document.composed_delta)
     let diff = new Delta(JSON.parse(localStorage.getItem(`doc_before`))).diff(temp_delta)
 
-    console.log(`doc before: ${JSON.stringify(editor.quill_editor.getContents())}`)
+    console.log(`doc before: ${JSON.parse(localStorage.getItem(`doc_before`))}`)
 
     console.log(`diff before trans: ${JSON.stringify(diff)}`)
     console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
