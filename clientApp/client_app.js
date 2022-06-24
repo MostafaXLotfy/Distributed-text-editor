@@ -166,17 +166,7 @@ window.addEventListener('load', async () => {
   })
 
   socket.on(`sync 2`,(incoming_document) =>{
-    let temp_delta = new Delta(incoming_document.composed_delta.ops)
-
-    for(let i = 0; i < temp_delta.ops.length > 0; i++){
-      console.log(temp_delta.ops[i])
-      if(temp_delta.ops[i].insert !== null){
-        console.log(typeof temp_delta.ops[i].insert)
-        console.log(temp_delta.ops[i].insert)
-      }
-
-
-    }
+    let temp_delta = new Delta(incoming_document.composed_delta)
     let diff = (new Delta(doc_before_disconnect)).diff(temp_delta)
 
     console.log(`doc before: ${JSON.stringify(doc_before_disconnect)}`)
@@ -184,6 +174,12 @@ window.addEventListener('load', async () => {
 
     console.log(`diff before trans: ${JSON.stringify(diff)}`)
     console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
+
+    if (client_state.waiting_ack){
+      client_state.pending_changes = client_state.last_sent_delta.compose(client_state.pending_changes)
+      client_state.last_sent_delta = new Delta()
+      client_state.waiting_ack = false
+    }
 
     if (client_state.have_pending_changes()){
 
@@ -209,7 +205,7 @@ window.addEventListener('load', async () => {
 
   })
   editor = new Editor()
-  setInterval(interval_handler, 500);
+  setInterval(interval_handler, 1000);
 
 })
 

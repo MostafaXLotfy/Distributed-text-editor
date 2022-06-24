@@ -60,8 +60,6 @@ const upload_file = async ()=> {
         upload_file()
       }
     }).then(() => writting = false)
-
-
 }
 
 
@@ -93,12 +91,15 @@ const start_socketio = (io) => {
         currentDelta = new Delta(edit.delta);
       }
       else {
-        // console.log("here");
-        // currentDelta = currentDelta.transform(edit.delta, true)
         return;
       }
 
       current_document.composed_delta = current_document.composed_delta.compose(currentDelta);
+      if(current_document.composed_delta.ops.length == 1 && current_document.composed_delta.ops[0].delete != null){
+        console.log(`fixed document`)
+        current_document.composed_delta = new Delta()
+      }
+      
       //save the document after each edit if there is no running writting operations else raise the delta not saved flag
       if (!writting) upload_file();
       else delta_not_saved = true;
