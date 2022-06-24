@@ -166,7 +166,8 @@ window.addEventListener('load', async () => {
   })
 
   socket.on(`sync 2`,(incoming_document) =>{
-    let temp_delta = new Delta(incoming_document.composed_delta)
+    let temp_delta = new Delta(incoming_document.composed_delta.ops)
+
     let diff = (new Delta(doc_before_disconnect)).diff(temp_delta)
 
     console.log(`doc before: ${JSON.stringify(doc_before_disconnect)}`)
