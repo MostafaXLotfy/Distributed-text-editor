@@ -7,6 +7,7 @@ var client_state = null
 let first_connection = false
 let pending_delta = new Delta()
 let doc_before_disconnect = new Delta()
+let saved_doc = {}
 
 const update_user_count = (user_count) => {
   let element = document.getElementById('user-number-paragraph')
@@ -19,6 +20,8 @@ const init_client = (new_document) => {
   client_state = new ClientState(new_document.v)
   editor.set_contents(new_document.delta, "silent")
   update_user_count(new_document.clientsCount)
+  saved_doc.composed_delta = new_document.delta
+  saved_doc.version = new_document.version
   console.log(`recevied latest edits:\n`)
 }
 
@@ -29,10 +32,9 @@ socket.on("document broadcast", (incoming_document) => {
   if (client_state.waiting_ack && _.isEqual(client_state.last_sent_delta.ops, incoming_document.delta.ops)) {
     // this is the case where we recieve and ack
     client_state.waiting_ack = false
-    //reset everything when an ack is received 
     client_state.last_sent_delta = new Delta()
-
-    console.warn('acked')
+    //reset everything when an ack is received 
+    
   } else if (client_state.waiting_ack) {
 
     // this is the case where we do a rebase
@@ -121,6 +123,9 @@ socket.on("document broadcast", (incoming_document) => {
 
 
   }
+  saved_doc.composed_delta = editor.quill_editor.getContents()
+  saved_doc.version = client_state.current_version
+
 })
 
 socket.on("user connected", (live_users_counter) => {
@@ -161,7 +166,7 @@ const interval_handler = ()=>{
 window.addEventListener('load', async () => {
   socket.once("init client", init_client)
   socket.io.on("reconnect", ()=>{
-    socket.emit(`sync`)
+    socket.emit(`sync`, saved_doc)
     console.log("Successfuly reconnected!")
   })
 
@@ -205,7 +210,7 @@ window.addEventListener('load', async () => {
 
   })
   editor = new Editor()
-  setInterval(interval_handler, 1000);
+  setInterval(interval_handler, 200);
 
 })
 

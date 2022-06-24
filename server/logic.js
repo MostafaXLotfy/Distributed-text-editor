@@ -46,8 +46,21 @@ const start_socketio = (io) => {
       clientsCount: io.engine.clientsCount,
     });
 
-    socket.on(`sync`, () => {
+    socket.on(`sync`, (incoming_document) => {
       console.log(`sync`)
+      if(incoming_document.version > current_document.version){
+        let temp_delta = new Delta(incoming_document.composed_delta)
+        let diff = current_document.composed_delta.diff(temp_delta)
+        console.log(`incoming : ${JSON.stringify(incoming_document)}`)
+        console.log(`in s3 : ${JSON.stringify(current_document)}`)
+  
+        console.log(`diff: ${JSON.stringify(diff)}`)
+        current_document.version = incoming_document.version + 1
+        current_document.composed_delta = current_document.composed_delta.compose(diff)
+        upload_doc('document.json')
+
+      }
+
       io.to(socket.id).emit(`sync 2`, current_document)
     })
     //send the updated user count to all other connected clients
@@ -72,8 +85,14 @@ const start_socketio = (io) => {
       }
 
       //save the document after each edit if there is no running writting operations else raise the delta not saved flag
-      if (!writting) upload_doc('document.json');
-      else delta_not_saved = true;
+   
+      if (!writting){
+        writting = true
+        upload_doc('document.json');
+      } 
+      else{
+        delta_not_saved = true;
+      } 
 
       //bump the current document version and broadcast it to all clients
       current_document.version = edit.v;
