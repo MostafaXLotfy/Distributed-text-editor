@@ -3,7 +3,6 @@ const app = express();
 const http = require("http").Server(app);
 const io = require("socket.io")(http);
 const path = require("path");
-const logic = require("./logic");
 const port = process.env.PORT || 3000;
 const { Doc } = require("./doc");
 
@@ -38,7 +37,7 @@ socket.broadcast.emit("user connected", io.engine.clientsCount);
 //listen for the docuemnt edit event from clients
 socket.on("document edit", (edit) => {
     //if the edit is ignored or acceppted
-    let result = doc.update_document(edit.delta, edit.v);
+    let result = doc.update_document(edit.delta, edit.version);
 
     if (result === "accept") {
     io.emit("document broadcast", edit); //   delta: currentDelta,
