@@ -17,10 +17,10 @@ const update_user_count = (user_count) => {
 
 
 const init_client = (new_document) => {
-  client_state = new ClientState(new_document.v)
-  editor.set_contents(new_document.delta, "silent")
+  client_state = new ClientState(new_document.version)
+  editor.set_contents(new_document.contents, "silent")
   update_user_count(new_document.clientsCount)
-  saved_doc.composed_delta = new Delta(new_document.delta)
+  saved_doc.composed_delta = new Delta(new_document.contents)
   saved_doc.version = new_document.version
   console.log(`recevied latest edits:\n`)
 }
@@ -181,11 +181,11 @@ const on_reconnect = async () => {
   console.log("start reconnection!")
   console.log(JSON.stringify(saved_doc))
   let incoming_document = await resync_client(saved_doc)
-  let temp_delta = new Delta(incoming_document.composed_delta)
+  let temp_delta = new Delta(incoming_document.contents)
   let diff = saved_doc.composed_delta.diff(temp_delta)
   console.log(`document in the editor: ${JSON.stringify(editor.get_contents())}`)
   console.log(`saved doc: ${JSON.stringify(saved_doc)}`)
-  console.log(`incoming doc: ${JSON.stringify(incoming_document.composed_delta)}`)
+  console.log(`incoming doc: ${JSON.stringify(incoming_document.contents)}`)
 
   console.log(`diff before transform: ${JSON.stringify(diff)}`)
   console.log(`pending before transform: ${JSON.stringify(client_state.pending_changes)}`)
@@ -202,7 +202,7 @@ const on_reconnect = async () => {
 
   }
   editor.update_contents(diff)
-  console.log(`doc after applying difference: ${JSON.stringify(editor.get_contents()())}`)
+  console.log(`doc after applying difference: ${JSON.stringify(editor.get_contents())}`)
 
   client_state.disconnected = false
   client_state.current_version = incoming_document.version
