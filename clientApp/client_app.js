@@ -4,7 +4,11 @@ let socket = io()
 var client_state = null
 let first_connection = false
 let pending_delta = new Delta()
-let doc_before_disconnect = new Delta()
+let doc_before_disconnect = {
+  composed_delta: new Delta(),
+  version: 0
+}
+
 let saved_doc = {
   composed_delta: new Delta(),
   version: 0
@@ -186,7 +190,7 @@ window.addEventListener('load', async () => {
   socket.once("init client", init_client)
   socket.io.on("reconnect", ()=>{
   console.log(JSON.stringify(doc_before_disconnect))
-  resync_client(saved_doc).then((incoming_document)=>{
+  resync_client(doc_before_disconnect).then((incoming_document)=>{
     let temp_delta = new Delta(incoming_document.composed_delta)
     let diff = (new Delta(doc_before_disconnect)).diff(temp_delta)
 
@@ -222,6 +226,9 @@ window.addEventListener('load', async () => {
 
   socket.on('disconnect',()=>{
     console.log(`disconnection`)
+    doc_before_disconnect.composed_delta = new Delta(editor.quill_editor.getContents())
+    doc_before_disconnect.version = client_state.current_version
+    client_state.disconnected = true
     if (client_state.waiting_ack === true){
       console.warn(`case waiting for ack at disconnect`)
       console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
@@ -233,8 +240,7 @@ window.addEventListener('load', async () => {
 
       client_state.waiting_ack = false
     }
-    doc_before_disconnect = new Delta(editor.quill_editor.getContents())
-    client_state.disconnected = true
+
 
   })
   editor = new Editor()
