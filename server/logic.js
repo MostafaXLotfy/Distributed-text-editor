@@ -34,13 +34,13 @@ const start_socketio = (io) => {
     });
 
     socket.on(`sync`, (incoming_document, callback) => {
-      console.log(`sync`)
+      console.log(`sync case start`)
 
       if(incoming_document.version > current_document.version){
         let temp_delta = new Delta(incoming_document.composed_delta)
         let diff = current_document.composed_delta.diff(temp_delta)
         console.log(`incoming : ${JSON.stringify(incoming_document)}`)
-        console.log(`in s3 : ${JSON.stringify(current_document)}`)
+        console.log(`in server : ${JSON.stringify(current_document)}`)
   
         console.log(`diff: ${JSON.stringify(diff)}`)
         current_document.version = incoming_document.version + 1
@@ -48,7 +48,18 @@ const start_socketio = (io) => {
         saveDocument()
 
       }
+
+      current_document.composed_delta = current_document.composed_delta.compose(new Delta())
+      let l = current_document.composed_delta.ops.length
+      if(l > 0 && current_document.composed_delta.ops[l-1].delete != null){
+        console.log(`fixed document`)
+        current_document.composed_delta.ops.pop()
+      }
+
+      console.log(`sent to the client: ${JSON.stringify(current_document)}`)
       callback(current_document)
+      console.log(`sync case end`)
+
     })
     //send the updated user count to all other connected clients
     socket.broadcast.emit("user connected", io.engine.clientsCount);
@@ -64,13 +75,18 @@ const start_socketio = (io) => {
         return;
       }
 
-      current_document.composed_delta = current_document.composed_delta.compose(currentDelta);
+      current_document.composed_delta = current_document.composed_delta.compose(currentDelta).compose(new Delta());
       let l = current_document.composed_delta.ops.length
       if(l > 0 && current_document.composed_delta.ops[l-1].delete != null){
         console.log(`fixed document`)
         current_document.composed_delta.ops.pop()
       }
+      console.log(`nomral case`)
+      console.log(`received `)
+      console.log(`latest doc: ${JSON.stringify(currentDelta)}`)
 
+      console.log(`latest doc: ${JSON.stringify(current_document)}`)
+      console.log(`normal case end`)
       //save the document after each edit if there is no running writting operations else raise the delta not saved flag
    
       if (!writting){

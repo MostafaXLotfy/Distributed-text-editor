@@ -33,7 +33,8 @@ const init_client = (new_document) => {
 
 
 socket.on("document broadcast", (incoming_document) => {
-
+  if(client_state.disconnected === true) return
+ 
   if (client_state.waiting_ack && _.isEqual(client_state.last_sent_delta.ops, incoming_document.delta.ops)) {
     // this is the case where we recieve and ack
     client_state.waiting_ack = false
@@ -43,7 +44,7 @@ socket.on("document broadcast", (incoming_document) => {
     client_state.last_sent_delta = new Delta()
 
     console.warn(`acked`)
-    
+
   } else if (client_state.waiting_ack) {
 
     // this is the case where we do a rebase
@@ -54,11 +55,11 @@ socket.on("document broadcast", (incoming_document) => {
     console.log(`document: ${JSON.stringify(editor.quill_editor.getContents())}`)
     console.log(`last sent: ${JSON.stringify(client_state.last_sent_delta)}`)
     console.log(`new delta: ${JSON.stringify(incoming_document.delta)}`)
-    
+
     // transform the recieved delta to avoid any conflicts 
 
     // if there is a pending change that wasn't sent then we should compose it with the latest thing we sent and didn't get ack
-    if (client_state.have_pending_changes()){
+    if (client_state.have_pending_changes()) {
       console.log(`here3`)
       console.log(`last_sent_delta: ${JSON.stringify(client_state.last_sent_delta)}`)
       new_delta = client_state.last_sent_delta.compose(client_state.pending_changes).transform(new_delta, true)
@@ -69,8 +70,8 @@ socket.on("document broadcast", (incoming_document) => {
       client_state.pending_changes = new_delta.transform(client_state.pending_changes, true)
       // client_state.latest_delta = client_state.pending_changes
       console.log(`pending after: ${JSON.stringify(client_state.pending_changes)}`)
-      
-    }else{
+
+    } else {
       // if there is no pending changes then we should compose only with the latest thing we sent
       console.log(`here4`)
       console.log(`last_sent_delta: ${JSON.stringify(client_state.last_sent_delta)}`)
@@ -110,7 +111,7 @@ socket.on("document broadcast", (incoming_document) => {
 
     let new_delta = new Delta(incoming_document.delta)
     // if there is an edit that 
-    if (client_state.have_pending_changes()){
+    if (client_state.have_pending_changes()) {
       console.log('here 2')
 
       console.log(`pending : ${JSON.stringify(client_state.pending_changes)}`)
@@ -139,9 +140,8 @@ socket.on("document broadcast", (incoming_document) => {
 
   }
 
-  
-  saved_doc.composed_delta = editor.quill_editor.getContents()
-  saved_doc.version = client_state.current_version
+
+
 
 })
 
@@ -153,83 +153,83 @@ socket.on("user connected", (live_users_counter) => {
 socket.on("user disconnected", (live_users_counter) => {
   update_user_count(live_users_counter)
   console.log(`a new user disconnected and the number of users is ${live_users_counter}`)
-  
+
   number_of_users = live_users_counter
 })
 
-const interval_handler = ()=>{
-    if (client_state?.have_pending_changes() && client_state?.disconnected === false){
-      // TODO:: Add logic for pending edits
-      if (client_state?.waiting_ack === false) {
-          console.warn("sending")
-          console.log(`try to send ${JSON.stringify(client_state.pending_changes)}`)
-          console.log(`document: ${JSON.stringify(editor.quill_editor.getContents())}`)
-          let pending_changes = client_state.get_pending_changes()
-          client_state.update_version()
-          socket.emit("document edit", {
-              "delta": pending_changes,
-              "v": client_state.current_version
-          })
-          client_state.last_sent_delta = new Delta(pending_changes)
-          client_state.waiting_ack = true
-          console.warn('waiting ack')
+const interval_handler = () => {
+  if (client_state?.have_pending_changes() && client_state?.disconnected === false) {
+    // TODO:: Add logic for pending edits
+    if (client_state?.waiting_ack === false) {
+      console.warn("sending")
+      console.log(`try to send ${JSON.stringify(client_state.pending_changes)}`)
+      console.log(`document: ${JSON.stringify(editor.quill_editor.getContents())}`)
+      let pending_changes = client_state.get_pending_changes()
+      client_state.update_version()
+      socket.emit("document edit", {
+        "delta": pending_changes,
+        "v": client_state.current_version
+      })
+      client_state.last_sent_delta = new Delta(pending_changes)
+      client_state.waiting_ack = true
+      console.warn('waiting ack')
 
-      }
     }
+  }
 }
 
-async function resync_client(saved_doc){
+async function resync_client(saved_doc) {
   return await new Promise(resolve => {
-    socket.emit('sync', saved_doc,(answer) => {
+    socket.emit('sync', saved_doc, (answer) => {
       resolve(answer);
-    });      
+    });
   });
 }
 
 window.addEventListener('load', async () => {
   socket.once("init client", init_client)
-  socket.io.on("reconnect", ()=>{
-  console.log(JSON.stringify(doc_before_disconnect))
-  resync_client(doc_before_disconnect).then((incoming_document)=>{
-    let temp_delta = new Delta(incoming_document.composed_delta)
-    let diff = (new Delta(doc_before_disconnect)).diff(temp_delta)
+    socket.io.on("reconnect", async () => {
 
-    console.log(`doc before: ${JSON.stringify(doc_before_disconnect)}`)
+    console.log("start reconnection!")
+    console.log(JSON.stringify(saved_doc))
+    let incoming_document = await resync_client(saved_doc)
+    let temp_delta = new Delta(incoming_document.composed_delta)
+    let diff = saved_doc.composed_delta.diff(temp_delta)
+    console.log(`document in the editor: ${JSON.stringify(editor.quill_editor.getContents())}`)
+    console.log(`saved doc: ${JSON.stringify(saved_doc)}`)
     console.log(`incoming doc: ${JSON.stringify(incoming_document.composed_delta)}`)
 
-    console.log(`diff before trans: ${JSON.stringify(diff)}`)
-    console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
+    console.log(`diff before transform: ${JSON.stringify(diff)}`)
+    console.log(`pending before transform: ${JSON.stringify(client_state.pending_changes)}`)
 
 
 
-    if (client_state.have_pending_changes()){
+    if (client_state.have_pending_changes()) {
 
       diff = client_state.pending_changes.transform(diff, true)
       client_state.pending_changes = diff.transform(client_state.pending_changes, true)
-      console.log(`pending after: ${JSON.stringify(client_state.pending_changes)}`)
+      console.log(`pending after transform: ${JSON.stringify(client_state.pending_changes)}`)
 
-      console.log(`diff after trans: ${JSON.stringify(diff)}`)
+      console.log(`diff after transform: ${JSON.stringify(diff)}`)
 
     }
     editor.update_contents(diff)
-    console.log(`doc after: ${JSON.stringify(editor.quill_editor.getContents())}`)
+    console.log(`doc after applying difference: ${JSON.stringify(editor.quill_editor.getContents())}`)
 
     client_state.disconnected = false
     client_state.current_version = incoming_document.version
-  })
-    console.log("Successfuly reconnected!")
-  })
-
-  socket.on(`sync 2`,(incoming_document) =>{
+    console.log("finished reconnection!")
 
   })
 
-  socket.on('disconnect',()=>{
+
+
+  socket.on('disconnect', () => {
     console.log(`disconnection`)
-    doc_before_disconnect.composed_delta = new Delta(editor.quill_editor.getContents())
-    doc_before_disconnect.version = client_state.current_version
+    saved_doc.composed_delta = editor.quill_editor.getContents()
+    saved_doc.version = client_state.current_version
     client_state.disconnected = true
-    if (client_state.waiting_ack === true){
+    if (client_state.waiting_ack === true) {
       console.warn(`case waiting for ack at disconnect`)
       console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
       console.log(`pending before: ${JSON.stringify(client_state.last_sent_delta)}`)
