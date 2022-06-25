@@ -1,7 +1,5 @@
 const Delta = require("quill-delta");
-const { json } = require("express");
-const {get_file, upload_file } = require("./aws_s3")
-
+const fs = require("fs")
 
 let current_document = {
   composed_delta: new Delta(),
@@ -13,28 +11,17 @@ let currentDelta = new Delta();
 let writting = false;
 let delta_not_saved = false;
 
-//I moved this function here because I need access to the global current_document object
+//if a json file exists then read it, if not then create it
+if (fs.existsSync("document.json")){
 
-const upload_doc = async (file_name)=> {
+  let parsed_document = JSON.parse(fs.readFileSync("document.json"))
+  current_document.composed_delta = new Delta(parsed_document.composed_delta)
+  current_document.version = parsed_document.version
 
-  upload_file(file_name, current_document).then((err, data) => {
-      if (err) return console.log(err)
-      //if after you finished writting the current document there was a new delta, then re-call the function
-      if (delta_not_saved) {
-        delta_not_saved = false;
-        upload_file(file_name, current_document)
-      }
-    }).then(() => writting = false)
-}
+  //currentDocument = new Delta(JSON.parse(fs.readFileSync("document.json")));
 
-const retrieve_document = async (file_name)=>{
-  let data = await get_file('document.json')
-  current_document.composed_delta = new Delta(data.composed_delta)
-  current_document.version = data.version
-}
+}else fs.writeFileSync("document.json", JSON.stringify(current_document));
 
-
-retrieve_document('document.json')
 
 
 const start_socketio = (io) => {
@@ -58,7 +45,7 @@ const start_socketio = (io) => {
         console.log(`diff: ${JSON.stringify(diff)}`)
         current_document.version = incoming_document.version + 1
         current_document.composed_delta = current_document.composed_delta.compose(diff)
-        upload_doc('document.json')
+        saveDocument()
 
       }
       callback(current_document)
@@ -88,7 +75,7 @@ const start_socketio = (io) => {
    
       if (!writting){
         writting = true
-        upload_doc('document.json');
+        saveDocument()
       } 
       else{
         delta_not_saved = true;
@@ -115,6 +102,15 @@ const start_socketio = (io) => {
   });
 };
 
-
+let saveDocument = async () => {
+  fs.writeFile("document.json", JSON.stringify(current_document), async () => {
+    //if after you finished writting the current document, there was a new delta then re-call the function
+    if (delta_not_saved) {
+      delta_not_saved = false;
+      saveDocument();
+    }
+    writting = false;
+  });
+};
 
 module.exports = { start_socketio };

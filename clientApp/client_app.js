@@ -1,7 +1,5 @@
 let Delta = Quill.import('delta')
-let socket = io({
-  transports: ["websocket"],
-})
+let socket = io()
 
 var client_state = null
 let first_connection = false
