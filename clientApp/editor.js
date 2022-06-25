@@ -41,5 +41,9 @@ class Editor {
     update_contents(delta, source){
         this.quill_editor.updateContents(delta, source)
     }
+
+    get_contents(){
+        return this.quill_editor.getContents()
+    }
 }
 
