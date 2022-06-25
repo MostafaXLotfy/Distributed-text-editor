@@ -196,9 +196,15 @@ window.addEventListener('load', async () => {
     console.log(`diff before trans: ${JSON.stringify(diff)}`)
     console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
 
-    if (client_state.waiting_ack){
+    if (client_state.waiting_ack === true){
+      console.warn(`case waiting for ack at disconnect`)
+      console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
+      console.log(`pending before: ${JSON.stringify(client_state.last_sent_delta)}`)
+
       client_state.pending_changes = client_state.last_sent_delta.compose(client_state.pending_changes)
       client_state.last_sent_delta = new Delta()
+      console.log(`pending after: ${JSON.stringify(client_state.pending_changes)}`)
+
       client_state.waiting_ack = false
     }
 
