@@ -188,25 +188,15 @@ window.addEventListener('load', async () => {
   console.log(JSON.stringify(saved_doc.composed_delta.ops))
   resync_client(saved_doc).then((incoming_document)=>{
     let temp_delta = new Delta(incoming_document.composed_delta)
-    let diff = (new Delta(doc_before_disconnect)).diff(temp_delta)
+    let diff = (new Delta(saved_doc)).diff(temp_delta)
 
-    console.log(`doc before: ${JSON.stringify(doc_before_disconnect)}`)
+    console.log(`doc before: ${JSON.stringify(saved_doc)}`)
     console.log(`incoming doc: ${JSON.stringify(incoming_document.composed_delta)}`)
 
     console.log(`diff before trans: ${JSON.stringify(diff)}`)
     console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
 
-    if (client_state.waiting_ack === true){
-      console.warn(`case waiting for ack at disconnect`)
-      console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
-      console.log(`pending before: ${JSON.stringify(client_state.last_sent_delta)}`)
 
-      client_state.pending_changes = client_state.last_sent_delta.compose(client_state.pending_changes)
-      client_state.last_sent_delta = new Delta()
-      console.log(`pending after: ${JSON.stringify(client_state.pending_changes)}`)
-
-      client_state.waiting_ack = false
-    }
 
     if (client_state.have_pending_changes()){
 
@@ -232,7 +222,18 @@ window.addEventListener('load', async () => {
 
   socket.on('disconnect',()=>{
     console.log(`disconnection`)
-    doc_before_disconnect = new Delta(editor.quill_editor.getContents())
+    if (client_state.waiting_ack === true){
+      console.warn(`case waiting for ack at disconnect`)
+      console.log(`pending before: ${JSON.stringify(client_state.pending_changes)}`)
+      console.log(`pending before: ${JSON.stringify(client_state.last_sent_delta)}`)
+
+      client_state.pending_changes = client_state.last_sent_delta.compose(client_state.pending_changes)
+      client_state.last_sent_delta = new Delta()
+      console.log(`pending after: ${JSON.stringify(client_state.pending_changes)}`)
+
+      client_state.waiting_ack = false
+    }
+    // doc_before_disconnect = new Delta(editor.quill_editor.getContents())
     client_state.disconnected = true
 
   })
