@@ -185,12 +185,12 @@ async function resync_client(saved_doc){
 window.addEventListener('load', async () => {
   socket.once("init client", init_client)
   socket.io.on("reconnect", ()=>{
-  console.log(JSON.stringify(saved_doc.composed_delta.ops))
+  console.log(JSON.stringify(doc_before_disconnect))
   resync_client(saved_doc).then((incoming_document)=>{
     let temp_delta = new Delta(incoming_document.composed_delta)
-    let diff = (new Delta(saved_doc)).diff(temp_delta)
+    let diff = (new Delta(doc_before_disconnect)).diff(temp_delta)
 
-    console.log(`doc before: ${JSON.stringify(saved_doc)}`)
+    console.log(`doc before: ${JSON.stringify(doc_before_disconnect)}`)
     console.log(`incoming doc: ${JSON.stringify(incoming_document.composed_delta)}`)
 
     console.log(`diff before trans: ${JSON.stringify(diff)}`)
@@ -233,7 +233,7 @@ window.addEventListener('load', async () => {
 
       client_state.waiting_ack = false
     }
-    // doc_before_disconnect = new Delta(editor.quill_editor.getContents())
+    doc_before_disconnect = new Delta(editor.quill_editor.getContents())
     client_state.disconnected = true
 
   })
