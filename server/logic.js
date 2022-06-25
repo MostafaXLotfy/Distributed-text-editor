@@ -46,8 +46,9 @@ const start_socketio = (io) => {
       clientsCount: io.engine.clientsCount,
     });
 
-    socket.on(`sync`, (incoming_document) => {
+    socket.on(`sync`, (incoming_document, callback) => {
       console.log(`sync`)
+
       if(incoming_document.version > current_document.version){
         let temp_delta = new Delta(incoming_document.composed_delta)
         let diff = current_document.composed_delta.diff(temp_delta)
@@ -60,8 +61,7 @@ const start_socketio = (io) => {
         upload_doc('document.json')
 
       }
-
-      io.to(socket.id).emit(`sync 2`, current_document)
+      callback(current_document)
     })
     //send the updated user count to all other connected clients
     socket.broadcast.emit("user connected", io.engine.clientsCount);

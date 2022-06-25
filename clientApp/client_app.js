@@ -7,7 +7,10 @@ var client_state = null
 let first_connection = false
 let pending_delta = new Delta()
 let doc_before_disconnect = new Delta()
-let saved_doc = {}
+let saved_doc = {
+  composed_delta: new Delta(),
+  version: 0
+}
 
 const update_user_count = (user_count) => {
   let element = document.getElementById('user-number-paragraph')
@@ -20,7 +23,7 @@ const init_client = (new_document) => {
   client_state = new ClientState(new_document.v)
   editor.set_contents(new_document.delta, "silent")
   update_user_count(new_document.clientsCount)
-  saved_doc.composed_delta = new_document.delta
+  saved_doc.composed_delta = new Delta(new_document.delta)
   saved_doc.version = new_document.version
   console.log(`recevied latest edits:\n`)
 }
@@ -32,8 +35,12 @@ socket.on("document broadcast", (incoming_document) => {
   if (client_state.waiting_ack && _.isEqual(client_state.last_sent_delta.ops, incoming_document.delta.ops)) {
     // this is the case where we recieve and ack
     client_state.waiting_ack = false
-    client_state.last_sent_delta = new Delta()
     //reset everything when an ack is received 
+    // saved_doc.composed_delta = saved_doc.composed_delta.compose(client_state.last_sent_delta)
+    // saved_doc.version = client_state.current_version
+    client_state.last_sent_delta = new Delta()
+
+    console.warn(`acked`)
     
   } else if (client_state.waiting_ack) {
 
@@ -60,7 +67,7 @@ socket.on("document broadcast", (incoming_document) => {
       client_state.pending_changes = new_delta.transform(client_state.pending_changes, true)
       // client_state.latest_delta = client_state.pending_changes
       console.log(`pending after: ${JSON.stringify(client_state.pending_changes)}`)
-
+      
     }else{
       // if there is no pending changes then we should compose only with the latest thing we sent
       console.log(`here4`)
@@ -77,6 +84,9 @@ socket.on("document broadcast", (incoming_document) => {
     console.log(`last sent after rebase: ${JSON.stringify(client_state.last_sent_delta)}`)
     console.log(`new delta after rebase: ${JSON.stringify(new_delta)}`)
     console.log(`latest edit ${JSON.stringify(client_state.latest_delta)}`)
+
+    // saved_doc.composed_delta = saved_doc.composed_delta.compose(new_delta)
+    // saved_doc.version = client_state.current_version
 
     editor.update_contents(new_delta, "silent")
 
@@ -117,12 +127,17 @@ socket.on("document broadcast", (incoming_document) => {
 
     console.log(`incoming after: ${JSON.stringify(new_delta)}`)
 
+    // saved_doc.composed_delta = saved_doc.composed_delta.compose(new_delta)
+    // saved_doc.version = client_state.current_version
+
     editor.update_contents(new_delta, "sielnt")
     console.log('document after rebase: ' + JSON.stringify(editor.quill_editor.getContents()))
 
 
 
   }
+
+  
   saved_doc.composed_delta = editor.quill_editor.getContents()
   saved_doc.version = client_state.current_version
 
@@ -161,16 +176,19 @@ const interval_handler = ()=>{
     }
 }
 
-
+async function resync_client(saved_doc){
+  return await new Promise(resolve => {
+    socket.emit('sync', saved_doc,(answer) => {
+      resolve(answer);
+    });      
+  });
+}
 
 window.addEventListener('load', async () => {
   socket.once("init client", init_client)
   socket.io.on("reconnect", ()=>{
-    socket.emit(`sync`, saved_doc)
-    console.log("Successfuly reconnected!")
-  })
-
-  socket.on(`sync 2`,(incoming_document) =>{
+  console.log(JSON.stringify(saved_doc.composed_delta.ops))
+  resync_client(saved_doc).then((incoming_document)=>{
     let temp_delta = new Delta(incoming_document.composed_delta)
     let diff = (new Delta(doc_before_disconnect)).diff(temp_delta)
 
@@ -200,6 +218,11 @@ window.addEventListener('load', async () => {
 
     client_state.disconnected = false
     client_state.current_version = incoming_document.version
+  })
+    console.log("Successfuly reconnected!")
+  })
+
+  socket.on(`sync 2`,(incoming_document) =>{
 
   })
 
