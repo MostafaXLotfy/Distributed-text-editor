@@ -87,7 +87,7 @@ class DocumentHandler {
       this.last_sent_delta = new Delta();
       console.warn(`acked`);
     } else if (client_state.waiting_ack) {
-      __rebase(edit.delta, edit.version);
+      this.__rebase(edit.delta, edit.version);
       socket.emit("document edit", {
         delta: this.last_sent_delta,
         version: this.version,
