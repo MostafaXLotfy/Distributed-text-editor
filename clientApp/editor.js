@@ -47,5 +47,17 @@ class Editor {
   enable_editing(enabled = true){
     this.quill_editor.enable(enabled)
   }
-  
+
+  update_user_count(user_count){
+    let element = document.getElementById("user-number-paragraph");
+    element.textContent = `connected users: ${user_count}`;
+  };
+
+  change_state(state){
+  let state_element = document.getElementById("state")
+  state_element.textContent = state
+  if(state == "online")state_element.style.color = "green"
+  else if(state == "offline")state_element.style.color = "red"
+  else state_element.style.color = "blue"
+}
 }
