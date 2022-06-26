@@ -12,6 +12,13 @@ const update_user_count = (user_count) => {
   let element = document.getElementById("user-number-paragraph");
   element.textContent = `connected users: ${user_count}`;
 };
+const change_state = (state)=>{
+  let state_element = document.getElementById("state")
+  state_element.textContent = state
+  if(state == "online")state_element.style.color = "green"
+  else if(state == "offline")state_element.style.color = "red"
+  else state_element.style.color = "blue"
+}
 
 const init_client = (new_document) => {
   document_handler = new DocumentHandler(
@@ -21,6 +28,8 @@ const init_client = (new_document) => {
   document_handler.version = new_document.version;
   editor.set_contents(new_document.contents);
   update_user_count(new_document.clientsCount);
+  change_state("online")
+
 };
 
 const interval_handler = () => {
@@ -52,6 +61,9 @@ const resync_client = async (saved_doc) => {
 };
 
 const on_reconnect = async () => {
+  editor.enable_editing(false)
+  change_state("syncing... Editing is disabled")
+
   let incoming_document = await resync_client({
     contents: document_handler.saved_at_disconnect,
     version: document_handler.version,
@@ -61,9 +73,13 @@ const on_reconnect = async () => {
 
   document_handler.update_document(diff, incoming_document.version);
   client_state.disconnected = false;
+
+  editor.enable_editing()
+  change_state("online")
 };
 
 const on_disconnect = () => {
+  change_state("offline")
   console.log(`disconnection`);
   document_handler.saved_at_disconnect = editor.get_contents();
 

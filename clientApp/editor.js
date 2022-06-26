@@ -44,4 +44,8 @@ class Editor {
   get_contents() {
     return this.quill_editor.getContents();
   }
+  enable_editing(enabled = true){
+    this.quill_editor.enable(enabled)
+  }
+  
 }
