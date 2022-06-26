@@ -46,6 +46,9 @@ class Editor {
   }
   enable_editing(enabled = true){
     this.quill_editor.enable(enabled)
+    if(enabled === true){
+      this.quill_editor.focus()
+    }
   }
 
   update_user_count(user_count){
