@@ -1,6 +1,14 @@
 const Delta = require("quill-delta");
 const fs = require("fs");
 
+
+
+function fix_document(doc){
+  let length = doc.ops.length
+  if (length > 0 && doc.ops[length - 1].delete != null){
+    doc.ops.pop()
+  }
+}
 class Doc {
   constructor() {
     this.contents = new Delta();
@@ -12,7 +20,8 @@ class Doc {
 
   update_document(delta, version) {
     if (version > this.version) {
-      this.contents = this.contents.compose(delta).compose(new Delta());
+      this.contents = this.contents.compose(delta);
+      fix_document(this.contents)
       this.version = version;
     } else {
       return "ignore";
@@ -30,12 +39,7 @@ class Doc {
     }
   }
 
-  __fix_document(){
-    let length = this.contents.ops.length
-    if (length > 0 && this.contents.ops[length - 1].delete != null){
-      this.contents.ops.pop()
-    }
-  }
+
   async __save_document() {
     fs.writeFile(
       "document.json",
@@ -69,9 +73,10 @@ class Doc {
 
   sync_document(incoming_document) {
     if (incoming_document.version > this.version) {
-      let temp_delta = new Delta(incoming_document.contents).compose(new Delta());
+      let temp_delta = new Delta(incoming_document.contents);
+      fix_document(temp_delta)
+      fix_document(this.contents)
       let diff = this.contents.diff(temp_delta);
-
       this.version = incoming_document.version;
       this.contents = this.contents.compose(diff);
       this.__save_document();
