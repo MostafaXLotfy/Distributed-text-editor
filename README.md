@@ -3,7 +3,7 @@
 To run the code
 
 
-1. npm install "install node js"
+1. npm install "install node modules"
 2. node app.js "make sure you are inside server directory"
 
 Demo link:https://youtu.be/IBJl47d9Uno
