@@ -30,6 +30,12 @@ class Doc {
     }
   }
 
+  __fix_document(){
+    let length = this.contents.ops.length
+    if (length > 0 && this.contents.ops[length - 1].delete != null){
+      this.contents.ops.pop()
+    }
+  }
   async __save_document() {
     fs.writeFile(
       "document.json",
@@ -63,7 +69,7 @@ class Doc {
 
   sync_document(incoming_document) {
     if (incoming_document.version > this.version) {
-      let temp_delta = new Delta(incoming_document.composed_delta);
+      let temp_delta = new Delta(incoming_document.contents).compose(new Delta());
       let diff = this.contents.diff(temp_delta);
 
       this.version = incoming_document.version;

@@ -38,6 +38,7 @@ const interval_handler = () => {
     client_state?.disconnected === false
   ) {
     if (client_state.waiting_ack === false) {
+      console.warn('wait ack')
       let delta = document_handler.pending_deltas;
       document_handler.update_version();
       document_handler.clear_pending_deltas();
@@ -62,7 +63,7 @@ const resync_client = async (saved_doc) => {
 
 const on_reconnect = async () => {
   editor.enable_editing(false)
-  change_state("syncing... Editing is disabled")
+  change_state("syncing... Editing is diabled")
 
   let incoming_document = await resync_client({
     contents: document_handler.saved_at_disconnect,
@@ -71,23 +72,20 @@ const on_reconnect = async () => {
   let temp_delta = new Delta(incoming_document.contents);
   let diff = document_handler.saved_at_disconnect.diff(temp_delta);
 
+  
   document_handler.update_document(diff, incoming_document.version);
   client_state.disconnected = false;
-
   editor.enable_editing()
+
   change_state("online")
 };
 
 const on_disconnect = () => {
   change_state("offline")
-  console.log(`disconnection`);
   document_handler.saved_at_disconnect = editor.get_contents();
 
   client_state.disconnected = true;
   if (client_state.waiting_ack === true) {
-    document_handler.pending_deltas = document_handler.last_sent_delta.compose(
-      document_handler.pending_deltas
-    );
     document_handler.last_sent_delta = new Delta();
     client_state.waiting_ack = false;
   }
