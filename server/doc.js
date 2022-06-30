@@ -1,4 +1,5 @@
 const Delta = require("quill-delta");
+const {get_document, save_document} = require("./database")
 const fs = require("fs");
 
 
@@ -9,12 +10,16 @@ function fix_document(doc){
     doc.ops.pop()
   }
 }
-class Doc {
-  constructor() {
+
+
+class DocumentHandler {
+  constructor(_id) {
+    this.doc = {_id,contents:new Delta(), version:0, Title:"Untitle Document"}
     this.contents = new Delta();
     this.version = 0;
     this.not_saved = false;
     this.writting = false;
+
     this.__load_document();
   }
 
@@ -41,32 +46,15 @@ class Doc {
 
 
   async __save_document() {
-    fs.writeFile(
-      "document.json",
-      JSON.stringify(this.get_document()),
-      async () => {
-        //if after you finished writting the current document, there was a new delta then re-call the function
-        if (this.not_saved) {
-          this.not_saved = false;
-          this.__save_document();
-        }
-        this.writting = false;
-      }
-    );
+      //todo: change signature
+      save_document(this.contents._id, this.contents)
   }
 
   __load_document() {
-    if (fs.existsSync("document.json")) {
-      let parsed_document = JSON.parse(fs.readFileSync("document.json"));
-      this.contents = new Delta(parsed_document.contents);
-      this.version = parsed_document.version;
-    } else
-      fs.writeFileSync(
-        "document.json",
-        JSON.stringify({ contents: this.contents, version: this.version })
-      );
+      this.doc = get_document(this.contents._id)
   }
 
+  //TODO::remove this
   get_document() {
     return { contents: this.contents, version: this.version };
   }
@@ -86,4 +74,4 @@ class Doc {
   }
 }
 
-module.exports = { Doc };
+module.exports = { DocumentHandler };

@@ -1,7 +1,7 @@
 
-const { Doc } = require("./doc");
+const { DocumentHandler } = require("./doc");
 
-let doc = new Doc();
+let doc = new DocumentHandler("62bde0de5abee10d8e6affec");
 
 const start_socketio = (io) => {
   io.on("connection", (socket) => {
