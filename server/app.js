@@ -18,7 +18,6 @@ const io = socketIo(server, {
 connect_db()
 start_socketio(io)
 app.get("/api/getDocument", (req, res) => {
-  console.log(doc.get_document())
   res.json({doc:doc.get_document(), clients_count:io.engine.clientsCount})
 });
 

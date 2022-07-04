@@ -29,7 +29,7 @@ const toolbarOptions = [
 ];
 
 const on_text_change = (delta, old_delta, source) => {
-  console.log("change");
+  
   if (source !== "user") return;
   document_handler.pend_delta(delta);
 };
@@ -62,6 +62,7 @@ const Editor = (props) => {
   const toolbar_ref = useRef(null);
   const [num_users, set_num_users] = useState(1);
   const clients_count = props.clients_count
+
   React.useEffect(() => {
     if(quill_editor) return;
     quill_editor = new Quill(editor_ref.current, {
@@ -71,11 +72,12 @@ const Editor = (props) => {
       theme: "snow",
     });
     document_handler = new DocumentHandler(doc.version);
+    quill_editor.on("text-change", on_text_change);
   }, []);
 
   React.useEffect(() => {
     set_contents(doc.contents, "silent");
-    quill_editor.on("text-change", on_text_change);
+    document_handler.version = doc.version
   }, [doc]);
 
   return (
