@@ -39,7 +39,7 @@ const save_document = (_id, doc) => {
   let documents = database.collection(documents_name);
     documents.updateOne(
     { _id: new ObjectId(_id) },
-    { $set: { title: "Untitled Document", content: doc.content, version:doc.version } },
+    { $set: { title: "Untitled Document", contents: doc.contents, version:doc.version } },
     { upsert: true }
 )
 };
@@ -47,7 +47,7 @@ const save_document = (_id, doc) => {
 const create_document = async (doc) => {
   let database = client.db(database_name);
   let documents = database.collection(documents_name);
-  return documents.insertOne({ content, doc });
+  return documents.insertOne({ contents:doc.contents, version:contents.version });
 };
 
 module.exports = {

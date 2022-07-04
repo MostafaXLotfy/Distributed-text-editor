@@ -1,15 +1,21 @@
+import { get_contents,  update_contents } from "../Components/Editor";
+import Delta from 'quill-delta'
+import _ from 'lodash'
+import {socket} from './socket-io'
+const client_state = {waiting_ack:false, disconnected:false}
+
 //temp name
 class DocumentHandler {
-  constructor() {
+  constructor(version) {
     this.pending_deltas = new Delta();
     this.last_sent_delta = new Delta();
     this.saved_at_disconnect = new Delta();
-    this.version = 0;
+    this.version = version;
   }
 
   //returns the version of the document that is present in the editor
   get_document() {
-    return editor.get_contents();
+    return get_contents();
   }
 
   // pends the edits that client can't sent in the state of waiting ack or disconnect
@@ -38,7 +44,6 @@ class DocumentHandler {
   //because  two users sends an edit to the server at the same time
   __rebase(delta, version) {
     // this is the case where we do a rebase
-
     let new_delta = new Delta(delta);
 
     // transform the recieved delta to avoid any conflicts
@@ -61,7 +66,7 @@ class DocumentHandler {
     this.last_sent_delta = new_delta.transform(this.last_sent_delta, true);
 
     // if there is any pending changes we should transform them according to what we received so we don't send a wrong delta
-    editor.update_contents(new_delta, "silent");
+    update_contents(new_delta, "silent");
     this.version = version + 1;
   }
 
@@ -76,16 +81,13 @@ class DocumentHandler {
       this.pending_deltas = new_delta.transform(this.pending_deltas, true);
     }
 
-    editor.update_contents(new_delta, "sielnt");
+    update_contents(new_delta, "sielnt");
   }
 
   handle_edit(edit) {
     if (this.__is_ack(edit.delta)) {
-      // this is the case where we recieve and ack
       client_state.waiting_ack = false;
-      //reset everything when an ack is received
       this.last_sent_delta = new Delta();
-      console.warn(`acked`);
     } else if (client_state.waiting_ack) {
       this.__rebase(edit.delta, edit.version);
       socket.emit("document edit", {
@@ -101,3 +103,4 @@ class DocumentHandler {
     this.version++;
   }
 }
+export {DocumentHandler, client_state}

@@ -14,9 +14,7 @@ function fix_document(doc){
 
 class DocumentHandler {
   constructor(_id) {
-    this.doc = {_id,contents:new Delta(), version:0, Title:"Untitle Document"}
-    this.contents = new Delta();
-    this.version = 0;
+    this.doc = {_id,contents:new Delta(), version:0, title:"Untitle Document"}
     this.not_saved = false;
     this.writting = false;
 
@@ -24,10 +22,10 @@ class DocumentHandler {
   }
 
   update_document(delta, version) {
-    if (version > this.version) {
-      this.contents = this.contents.compose(delta);
-      fix_document(this.contents)
-      this.version = version;
+    if (version > this.doc.version) {
+      this.doc.contents = this.doc.contents.compose(delta);
+      fix_document(this.doc.contents)
+      this.doc.version = version;
     } else {
       return "ignore";
     }
@@ -36,41 +34,40 @@ class DocumentHandler {
   }
 
   __save() {
-    if (!this.writting) {
-      this.writting = true;
       this.__save_document();
-    } else {
-      this.saved_delta = true;
-    }
   }
 
 
   async __save_document() {
       //todo: change signature
-      save_document(this.contents._id, this.contents)
+      save_document(this.doc._id, this.doc)
   }
 
-  __load_document() {
-      this.doc = get_document(this.contents._id)
+  async __load_document() {
+      let data = await get_document(this.doc._id)
+      this.doc.title = data.title
+      this.doc.contents = new Delta(data.contents)
+      this.doc._id = data._id
+      this.doc.version = data.version
+
   }
 
-  //TODO::remove this
   get_document() {
-    return { contents: this.contents, version: this.version };
+    return this.doc;
   }
 
   sync_document(incoming_document) {
-    if (incoming_document.version > this.version) {
+    if (incoming_document.version > this.doc.version) {
       let temp_delta = new Delta(incoming_document.contents);
       fix_document(temp_delta)
-      fix_document(this.contents)
-      let diff = this.contents.diff(temp_delta);
-      this.version = incoming_document.version;
-      this.contents = this.contents.compose(diff);
+      fix_document(this.doc.contents)
+      let diff = this.doc.contents.diff(temp_delta);
+      this.doc.version = incoming_document.version;
+      this.doc.contents = this.doc.contents.compose(diff);
       this.__save_document();
     }
 
-    this.contents = this.contents.compose(new Delta());
+    this.doc.contents = this.doc.contents.compose(new Delta());
   }
 }
 

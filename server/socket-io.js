@@ -1,16 +1,16 @@
 
 const { DocumentHandler } = require("./doc");
 
-let doc = new DocumentHandler("62bde0de5abee10d8e6affec");
+let doc = new DocumentHandler("62c23c4541d73d93e152ca71");
 
 const start_socketio = (io) => {
   io.on("connection", (socket) => {
     //send latest delta to client after establishing a connection
-    io.to(socket.id).emit("init client", {
+    /*io.to(socket.id).emit("init client", {
       contents: doc.contents,
       version: doc.version,
       clientsCount: io.engine.clientsCount,
-    });
+    });*/
 
     socket.on(`sync`, (incoming_document, callback) => {
       console.log(`sync case start`);
@@ -25,10 +25,8 @@ const start_socketio = (io) => {
     socket.on("document edit", (edit) => {
       //if the edit is ignored or acceppted
       let result = doc.update_document(edit.delta, edit.version);
-
       if (result === "accept") {
-        io.emit("document broadcast", edit); //   delta: currentDelta,
-        //   v: current_document.version,)
+        io.emit("document broadcast", edit); 
       } else if ("reject") {
         return;
       }
@@ -41,4 +39,4 @@ const start_socketio = (io) => {
   });
 };
 
-module.exports = {start_socketio}
+module.exports = {start_socketio, doc}
