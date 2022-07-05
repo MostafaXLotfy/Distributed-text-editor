@@ -21,6 +21,8 @@ class DocumentHandler {
     this.loaded = false;
   }
 
+
+
   update_document(delta, version) {
     if (version > this.doc.version) {
       this.doc.contents = this.doc.contents.compose(delta);

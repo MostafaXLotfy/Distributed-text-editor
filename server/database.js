@@ -54,8 +54,9 @@ const create_document = async (doc) => {
   let database = client.db(database_name);
   let documents = database.collection(documents_name);
   return documents.insertOne({
+    title: doc.title,
     contents: doc.contents,
-    version: contents.version,
+    version: doc.version,
   });
 };
 
