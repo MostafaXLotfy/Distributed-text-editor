@@ -1,21 +1,26 @@
 import socketIOClient from "socket.io-client";
-import {get_contents,document_handler, change_state, enable_editing} from '../Components/Editor'
-import Delta from 'quill-delta'
-import {client_state} from './DocumentHandler'
-
+import {
+  get_contents,
+  document_handler,
+  change_state,
+  enable_editing,
+} from "../Components/Editor";
+import Delta from "quill-delta";
+import { client_state } from "./DocumentHandler";
 
 
 const ENDPOINT = "http://localhost:5000";
-const socket = socketIOClient(ENDPOINT, {
-
-})
-
+const socket = socketIOClient(ENDPOINT, {});
 
 const resync_client = async (saved_doc) => {
   return await new Promise((resolve) => {
-    socket.emit("sync", saved_doc, (answer) => {
-      resolve(answer);
-    });
+    socket.emit(
+      "sync",
+      { contents: saved_doc.contents, version: saved_doc.version, _id:document_handler._id },
+      (answer) => {
+        resolve(answer);
+      }
+    );
   });
 };
 
@@ -48,9 +53,9 @@ const on_disconnect = () => {
 };
 
 const on_document_broadcast = (edit) => {
+  console.log(JSON.stringify(edit));
   document_handler.handle_edit(edit);
 };
-
 
 const interval_handler = () => {
   if (
@@ -58,13 +63,14 @@ const interval_handler = () => {
     client_state?.disconnected === false
   ) {
     if (client_state.waiting_ack === false) {
-      console.warn('wait ack')
+      console.warn("wait ack");
       let delta = document_handler.pending_deltas;
       document_handler.update_version();
       document_handler.clear_pending_deltas();
       socket.emit("document edit", {
         delta: delta,
         version: document_handler.version,
+        _id: document_handler._id
       });
 
       document_handler.last_sent_delta = new Delta(delta);
@@ -73,4 +79,10 @@ const interval_handler = () => {
   }
 };
 
-export { on_document_broadcast, on_disconnect, on_reconnect, interval_handler,socket};
+export {
+  on_document_broadcast,
+  on_disconnect,
+  on_reconnect,
+  interval_handler,
+  socket,
+};

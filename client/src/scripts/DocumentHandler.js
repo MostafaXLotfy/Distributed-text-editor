@@ -6,7 +6,8 @@ const client_state = {waiting_ack:false, disconnected:false}
 
 //temp name
 class DocumentHandler {
-  constructor(version) {
+  constructor(_id,version) {
+    this._id = _id
     this.pending_deltas = new Delta();
     this.last_sent_delta = new Delta();
     this.saved_at_disconnect = new Delta();

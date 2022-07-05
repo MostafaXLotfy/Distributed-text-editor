@@ -3,30 +3,18 @@ import React from "react";
 import { DocumentHandler } from "../scripts/DocumentHandler";
 import { DocumentContext } from "../Contexts/documentContext";
 import { useState, useContext, useRef } from "react";
+import {useParams} from 'react-router-dom'
+import {
+  on_document_broadcast,
+  on_disconnect,
+  on_reconnect,
+  socket,
+  interval_handler,
+} from "../scripts/socket-io";
 
 let document_handler;
-//let quill_editor;
 let quill_editor;
-//let ref
 
-const toolbarOptions = [
-  ["bold", "italic", "underline", "strike"], // toggled buttons
-  ["blockquote", "code-block"],
-
-  [{ header: 1 }, { header: 2 }], // custom button values
-  [{ list: "ordered" }, { list: "bullet" }],
-  [{ script: "sub" }, { script: "super" }], // superscript/subscript
-  [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
-  [{ direction: "rtl" }], // text direction
-
-  [{ size: ["small", false, "large", "huge"] }], // custom dropdown
-  [{ header: [1, 2, 3, 4, 5, 6, false] }],
-
-  [{ color: [] }, { background: [] }], // dropdown with defaults from theme
-  [{ font: [] }],
-  [{ align: [] }],
-  ["clean"], // remove formatting button
-];
 
 const on_text_change = (delta, old_delta, source) => {
   
@@ -57,11 +45,10 @@ const change_state = () => {
   return;
 };
 const Editor = (props) => {
-  const doc = useContext(DocumentContext);
   const editor_ref = useRef(null);
   const toolbar_ref = useRef(null);
-  const [num_users, set_num_users] = useState(1);
-  const clients_count = props.clients_count
+  const {_id} = useParams()
+  const [clients_count, set_clients_count] = useState(1)
 
   React.useEffect(() => {
     if(quill_editor) return;
@@ -71,16 +58,35 @@ const Editor = (props) => {
       },
       theme: "snow",
     });
-    document_handler = new DocumentHandler(doc.version);
     quill_editor.on("text-change", on_text_change);
   }, []);
 
   React.useEffect(() => {
-    set_contents(doc.contents, "silent");
-    document_handler.version = doc.version
-  }, [doc]);
+    const foo = async()=>{
+	const response = await fetch(`/api/getDocument/${_id}`)
+	const data = await response.json()
+	console.log(JSON.stringify(data))
+	socket.emit(`room`, _id)
+	document_handler = new DocumentHandler(_id, data.doc.version);
+	set_contents(data.doc.contents, "silent");
 
+    }
+      foo()
+  }, []);
+
+    React.useEffect(()=>{
+	socket.io.on("reconnect", on_reconnect);
+	socket.on("disconnect", on_disconnect);
+	socket.on("document broadcast", on_document_broadcast);
+
+	socket.on("user connected", (count)=> set_clients_count(count));
+
+	socket.on("user disconnected", (count)=> set_clients_count(count));
+
+	setInterval(interval_handler, 50);
+    }, [])
   return (
+
     <React.Fragment>
       <div>
         <p>Connected: {clients_count}</p>

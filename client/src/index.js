@@ -6,10 +6,10 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-    <React.Fragment>
-    <link rel="stylesheet" href="//cdn.quilljs.com/1.2.6/quill.snow.css"/>
+    <BrowserRouter>
+        <link rel="stylesheet" href="//cdn.quilljs.com/1.2.6/quill.snow.css"/>
 	<App />
-    </React.Fragment>
+    </BrowserRouter>
 );
 
 // If you want to start measuring performance in your app, pass a function
