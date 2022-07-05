@@ -20,7 +20,6 @@ app.get("/api/getDocument/:_id",  async(req, res) => {
   const _id = req.params._id;
   make_document(_id);
   const doc = await get_document(_id);
-  console.log(doc)
   res.json({ doc });
 });
 

@@ -2,27 +2,36 @@ const { DocumentHandler } = require("./doc");
 
 let docs = {};
 
-const make_document =  (_id) => {
+const make_document = (_id) => {
   if (docs[_id] != null) return;
-  docs[_id] =  new DocumentHandler(_id);
+  docs[_id] = new DocumentHandler(_id);
 };
-const get_document =  async(_id) => {
-  return  docs[_id].get_document();
+
+const get_document = async (_id) => {
+  return docs[_id].get_document();
 };
+
 const start_socketio = (io) => {
   io.on("connection", (socket) => {
     socket.on(`room`, (room) => {
       socket.join(room);
+      io.to(room).emit("user count", io.sockets.adapter.rooms.get(room).size);
     });
+
     socket.on(`sync`, (incoming_document, callback) => {
       const _id = incoming_document._id;
-      make_document(_id)
+      make_document(_id);
       docs[_id].sync_document(incoming_document);
       callback(docs[_id].get_document());
     });
 
-    //send the updated user count to all other connected clients
-    //io.to(_id).emit("user connected", 0);
+    socket.on("change title", (edit) => {
+      let _id = edit._id;
+      docs[_id].doc.title = edit.title;
+      docs[_id].__save_document();
+      io.to(_id).emit("title changed", edit.title);
+    });
+
     //listen for the docuemnt edit event from clients
     socket.on("document edit", (edit) => {
       const _id = edit._id;
@@ -34,12 +43,17 @@ const start_socketio = (io) => {
       }
     });
 
-    //Whenever someone disconnects this piece of code gets executed
-    //socket.on("disconnect", function () {
-    //io.to(_id).emit("user disconnected", 0);
-    //});
+    socket.on("disconnecting", () => {
+      const rooms = Array.from(socket.rooms).slice(1);
+      for (const room of rooms) {
+        io.to(room).emit(
+          "user count",
+          io.sockets.adapter.rooms.get(room).size - 1
+        );
+        socket.leave(room);
+      }
+    });
   });
-  //return {doc:docs[_id].get_document(), clients_count:0};
 };
 
 module.exports = { start_socketio, make_document, get_document };

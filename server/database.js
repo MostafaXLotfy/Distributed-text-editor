@@ -41,7 +41,7 @@ const save_document = (_id, doc) => {
     { _id: new ObjectId(_id) },
     {
       $set: {
-        title: "Untitled Document",
+        title: doc.title,
         contents: doc.contents,
         version: doc.version,
       },
