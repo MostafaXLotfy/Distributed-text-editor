@@ -1,0 +1,11 @@
+.documents-display{
+    display:flex;
+    margin-bottom:2em;
+    flex-wrap:wrap;
+}
+
+.home-container{
+    display:flex;
+    justify-content:center;
+}
+

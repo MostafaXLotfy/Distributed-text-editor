@@ -1,0 +1,32 @@
+.card-container{
+    text-decoration:none;
+    padding:5px;
+    display:inline-flex;
+    min-width: 10em;
+    border:1px solid black;
+    border-radius:10px;
+    margin-right:10px
+}
+
+.card-container p{
+    display:inline;
+    font-size:16px;
+}
+
+.card-container .link:visited{
+    color:inherit;
+}
+
+.card-container:hover{
+    background-color:gray;
+    cursor:pointer;
+}
+
+
+
+.card-container img{
+    max-width: 3em;
+    max-height: 3em;
+    display: inline;
+}
+

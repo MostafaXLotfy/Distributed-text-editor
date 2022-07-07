@@ -2,7 +2,6 @@ import socketIOClient from "socket.io-client";
 import {
   get_contents,
   document_handler,
-  change_state,
   enable_editing,
 } from "../Components/Editor";
 import Delta from "quill-delta";
@@ -12,7 +11,7 @@ const ENDPOINT = "http://localhost:5000";
 const socket = socketIOClient(ENDPOINT, {});
 
 
-const change_title = (_id, title) =>{
+const broadcast_title = (_id, title) =>{
     socket.emit('change title', {_id, title})
 }
 
@@ -35,7 +34,6 @@ const resync_client = async (saved_doc) => {
 
 const on_reconnect = async () => {
   enable_editing(false);
-  change_state("syncing... Editing is diabled");
   let incoming_document = await resync_client({
     contents: document_handler.saved_at_disconnect,
     version: document_handler.version,
@@ -47,11 +45,9 @@ const on_reconnect = async () => {
   client_state.disconnected = false;
   enable_editing();
 
-  change_state("online");
 };
 
 const on_disconnect = () => {
-  change_state("offline");
   document_handler.saved_at_disconnect = get_contents();
 
   client_state.disconnected = true;
@@ -93,5 +89,5 @@ export {
   on_reconnect,
   interval_handler,
   socket,
-  change_title,
+  broadcast_title,
 };
