@@ -5,7 +5,14 @@
     min-width: 10em;
     border:1px solid black;
     border-radius:10px;
-    margin-right:10px
+    margin-right:10px;
+    margin-bottom:10px;
+
+    min-height:3em;
+    max-height:3em;
+
+    min-width:20em;
+    max-width:20em;
 }
 
 .card-container p{
@@ -17,9 +24,13 @@
     color:inherit;
 }
 
-.card-container:hover{
+.card-container:active{
     background-color:gray;
     cursor:pointer;
+}
+
+.card-container:focus{
+    background-color:gray;
 }
 
 
@@ -30,3 +41,12 @@
     display: inline;
 }
 
+.remove-button{
+    margin-left:auto;
+    border-radius:20px;
+    background-color:white;
+}
+
+.remove-button:hover{
+    background-color:gray;
+}

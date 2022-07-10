@@ -1,11 +1,36 @@
-.documents-display{
-    display:flex;
-    margin-bottom:2em;
-    flex-wrap:wrap;
+.documents-display {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction:row;
+  justify-content: left;
+  align-content:flex-start;
 }
 
-.home-container{
-    display:flex;
-    justify-content:center;
+.home-container {
+  display: flex;
+  padding:10px;
+  flex-direction:row;
+  margin-bottom:20px;
+  margin-left:10px;
+  margin-right:10px;
+  border:2px solid black;
 }
 
+.floating-button {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  border: none;
+  border-radius: 50%;
+  width: 6em;
+  height: 6em;
+  display: flex;
+  background-color: firebrick;
+  color: white;
+  box-shadow: 2px 2px 2px gray;
+}
+
+.floating-button:hover {
+  box-shadow: 5px 5px 5px gray;
+  cursor: pointer;
+}

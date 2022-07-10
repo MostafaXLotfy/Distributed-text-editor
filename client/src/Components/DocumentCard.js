@@ -13,8 +13,11 @@ const DocumentCard = (props)=>{
 	    navigate(`/Editor/${_id}`)
 	}
     }
+    const handle_menu = (event)=>{
+	event.preventDefault();
+    }
     return(
-	<div className='card-container' onClick={handle_click}>
+	<div className='card-container' onClick={handle_click} tabIndex="1" onContextMenu={handle_menu}>
 	    <img src={documentImage} title={title} alt={title}/>
 	    <p>{title}</p>
 	</div>
