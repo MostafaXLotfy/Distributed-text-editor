@@ -1,13 +1,14 @@
-import { get_contents,  update_contents } from "../Components/Editor";
-import Delta from 'quill-delta'
-import _ from 'lodash'
-import {socket} from './socket-io'
-const client_state = {waiting_ack:false, disconnected:false}
+import { get_contents, update_contents } from "../Components/Editor";
+import Delta from "quill-delta";
+import _ from "lodash";
+import { send_edit } from "./socket-io";
+const client_state = { waiting_ack: false, disconnected: false };
 
 //temp name
 class DocumentHandler {
-  constructor(_id,version) {
-    this._id = _id
+  constructor(_id, version) {
+    this._id = _id;
+
     this.pending_deltas = new Delta();
     this.last_sent_delta = new Delta();
     this.saved_at_disconnect = new Delta();
@@ -91,9 +92,10 @@ class DocumentHandler {
       this.last_sent_delta = new Delta();
     } else if (client_state.waiting_ack) {
       this.__rebase(edit.delta, edit.version);
-      socket.emit("document edit", {
+      send_edit({
         delta: this.last_sent_delta,
         version: this.version,
+        _id: this._id,
       });
     } else {
       this.update_document(edit.delta, edit.version);
@@ -104,4 +106,4 @@ class DocumentHandler {
     this.version++;
   }
 }
-export {DocumentHandler, client_state}
+export { DocumentHandler, client_state };

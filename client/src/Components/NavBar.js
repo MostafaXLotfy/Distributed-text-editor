@@ -1,25 +1,30 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import "../css/NavBar.css";
+import {CurrentDocumentTitleContext} from './global_context'
+import {useContext} from 'react'
 
+//TODO::implement sign_in, sign_up, log_out
 const sign_in = () => {};
 
 const sign_up = () => {};
 
 const log_out = () => {};
 
-const NavBar = (props) => {
-  const title = props.document_title;
-  const on_title_change = props.on_title_change;
+const NavBar = () => {
+  const [title, set_title, ] = useContext(CurrentDocumentTitleContext)
+
   const on_title_focus = (event) => {
     event.target.contentEditable = true;
   };
 
+  
   const on_title_blur = (event) => {
     event.target.contentEditable = false;
-    on_title_change(event.target.innerText);
-    props.broadcast_title(event.target.innerText)
+    set_title(event.target.innerText, true)
   };
+
+  //TODO::prevent new lines in the dcoument-title div
   return (
     <nav>
       <Link to={`/`} className="link">

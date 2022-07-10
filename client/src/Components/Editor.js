@@ -1,16 +1,15 @@
 import Quill from "quill";
-import React from "react";
+import React, { useContext } from "react";
 import { DocumentHandler } from "../scripts/DocumentHandler";
 import { useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import {
-  on_document_broadcast,
-  on_disconnect,
-  on_reconnect,
-  socket,
+  join_room,
   interval_handler,
+  register_events,
 } from "../scripts/socket-io";
 
+import { CurrentDocumentTitleContext } from "./global_context";
 let document_handler;
 let quill_editor;
 
@@ -38,51 +37,44 @@ const enable_editing = (enabled) => {
   }
 };
 
-
-const Editor = (props) => {
-  const editor_ref = useRef(null);
+const Editor = () => {
   const toolbar_ref = useRef(null);
-  const on_title_change = props.on_title_change;
   const { _id } = useParams();
   const [clients_count, set_clients_count] = useState(1);
+  const [, set_title, , set_id] = useContext(CurrentDocumentTitleContext);
 
   React.useEffect(() => {
-    quill_editor = new Quill(editor_ref.current, {
+    quill_editor = new Quill("#editor", {
       modules: {
         toolbar: toolbar_ref,
       },
       theme: "snow",
     });
-
     quill_editor.on("text-change", on_text_change);
+
     const get_document = async () => {
       const response = await fetch(`/api/getDocument/${_id}`);
       const data = await response.json();
-      socket.emit(`room`, _id);
+      join_room(_id);
       document_handler = new DocumentHandler(_id, data.doc.version, data.title);
       set_contents(data.doc.contents, "silent");
-      on_title_change(data.doc.title);
-      props.set_id(_id)
+      set_title(data.doc.title);
+      set_id(_id);
     };
     get_document();
 
-    socket.io.on("reconnect", on_reconnect);
-    socket.on("disconnect", on_disconnect);
-    socket.on("document broadcast", on_document_broadcast);
-
-    socket.on("user count", (count) => {
-      set_clients_count(count);
-    });
-
-    socket.on("title changed", (title) => {
-      on_title_change(title);
-    });
+    register_events([
+      { name: "user count", handler: (count) => set_clients_count(count) },
+      { name: "title changed", handler: (new_title) => set_title(new_title) },
+    ]);
 
     const interval = setInterval(interval_handler, 20);
-    return()=>{
-	on_title_change(null)
-	clearInterval(interval)
-    }
+    return () => {
+      toolbar_ref.current = null;
+
+      set_title(null);
+      clearInterval(interval);
+    };
   }, []);
 
   return (
@@ -91,7 +83,7 @@ const Editor = (props) => {
         <p>Connected: {clients_count}</p>
       </div>
       <div id="toolbar" ref={toolbar_ref}></div>
-      <div id="editor" ref={editor_ref}></div>
+      <div id="editor"></div>
     </div>
   );
 };

@@ -10,11 +10,9 @@ import { client_state } from "./DocumentHandler";
 const ENDPOINT = "http://localhost:5000";
 const socket = socketIOClient(ENDPOINT, {});
 
-
-const broadcast_title = (_id, title) =>{
-    socket.emit('change title', {_id, title})
-}
-
+const broadcast_title = (_id, title) => {
+  socket.emit("change title", { _id, title });
+};
 
 const resync_client = async (saved_doc) => {
   return await new Promise((resolve) => {
@@ -44,7 +42,6 @@ const on_reconnect = async () => {
   document_handler.update_document(diff, incoming_document.version);
   client_state.disconnected = false;
   enable_editing();
-
 };
 
 const on_disconnect = () => {
@@ -67,11 +64,10 @@ const interval_handler = () => {
     client_state?.disconnected === false
   ) {
     if (client_state.waiting_ack === false) {
-      console.warn("wait ack");
       let delta = document_handler.pending_deltas;
       document_handler.update_version();
       document_handler.clear_pending_deltas();
-      socket.emit("document edit", {
+      send_edit({
         delta: delta,
         version: document_handler.version,
         _id: document_handler._id,
@@ -83,11 +79,27 @@ const interval_handler = () => {
   }
 };
 
+const register_events = (events = []) => {
+  socket.on("document broadcast", on_document_broadcast);
+  socket.io.on("reconnect", on_reconnect);
+  socket.on("disconnect", on_disconnect);
+  for (const event of events) {
+    socket.on(event.name, event.handler);
+  }
+};
+
+const join_room = (room_id) => {
+  socket.emit("room", room_id);
+};
+
+const send_edit = (edit) => {
+  socket.emit("document edit", edit);
+};
+
 export {
-  on_document_broadcast,
-  on_disconnect,
-  on_reconnect,
   interval_handler,
-  socket,
+  join_room,
+  send_edit,
   broadcast_title,
+  register_events,
 };

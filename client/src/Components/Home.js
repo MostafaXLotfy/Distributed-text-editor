@@ -5,12 +5,8 @@ import "../css/Home.css";
 const Home = (props) => {
   const [documents, set_documents] = useState([]);
 
-  const get_all_documents = async () => {
-    const response = await fetch("api/getAllDocuments");
-    const data = await response.json();
-    set_documents(data);
-  };
 
+  //TODO:: Add a button for this
   const create_document = () => {
     const body = JSON.stringify({
       title: "Untitled Document",
@@ -28,7 +24,9 @@ const Home = (props) => {
   };
 
   useEffect(() => {
-    get_all_documents();
+    fetch("api/getAllDocuments")
+	  .then(response => response.json())
+	  .then(data=>set_documents(data));
   }, []);
 
   return (
